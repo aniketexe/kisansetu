@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KarzTrack — NGO Admin Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --earth: #2D1B00;
+    --soil: #5C3A1E;
+    --wheat: #D4A853;
+    --gold: #F2C46D;
+    --cream: #FDF6E3;
+    --sage: #7A9E7E;
+    --leaf: #4A7C59;
+    --white: #FFFFFF;
+    --muted: #8A7560;
+    --border: rgba(92,58,30,0.15);
+    --surface: #F7F0DC;
+    --danger: #C0392B;
+    --warning: #D4813A;
+    --ngo: #7B3F00;
+    --ngo-light: rgba(123,63,0,0.08);
+    --ngo-mid: #A0522D;
+    --indigo: #3D3074;
+    --teal: #2A7F8A;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--earth);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── VIEWS ── */
+  .view { display: none; min-height: 100vh; }
+  .view.active { display: block; }
+
+  /* ══════════════════════════
+     AUTH
+  ══════════════════════════ */
+  #view-auth.active {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 100vh;
+  }
+
+  .auth-panel {
+    background: var(--earth);
+    padding: 56px 64px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    position: relative; overflow: hidden;
+  }
+  .auth-panel::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 20% 30%, rgba(212,168,83,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 80% 60% at 90% 80%, rgba(74,124,89,0.1) 0%, transparent 60%);
+  }
+  .auth-hex {
+    position: absolute; inset: 0; opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='100'%3E%3Cpath d='M28 66L0 50V18L28 2l28 16v32L28 66zm0 34L0 84V52l28-16 28 16v32L28 100z' fill='none' stroke='%23D4A853' stroke-width='1'/%3E%3C/svg%3E");
+    background-size: 56px 100px;
+  }
+
+  .auth-brand {
+    position: relative; z-index: 1;
+  }
+  .auth-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem; font-weight: 900;
+    color: var(--cream); letter-spacing: -0.5px;
+  }
+  .auth-logo span { color: var(--wheat); }
+  .auth-logo small {
+    display: block; font-size: 0.68rem; letter-spacing: 2.5px;
+    text-transform: uppercase; color: rgba(253,246,227,0.4);
+    margin-top: 2px; font-weight: 400;
+  }
+
+  .auth-content { position: relative; z-index: 1; }
+  .auth-content h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 2.8vw, 3rem);
+    font-weight: 900; color: var(--cream);
+    line-height: 1.1; letter-spacing: -1px;
+    margin-bottom: 18px;
+  }
+  .auth-content h2 em { color: var(--wheat); font-style: italic; }
+  .auth-content p {
+    font-size: 0.92rem; color: rgba(253,246,227,0.55);
+    line-height: 1.75; max-width: 380px;
+  }
+
+  .auth-features {
+    display: flex; flex-direction: column; gap: 12px;
+    margin-top: 28px; position: relative; z-index: 1;
+  }
+  .auth-feat {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 0.82rem; color: rgba(253,246,227,0.7);
+  }
+  .auth-feat-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: rgba(253,246,227,0.07);
+    border: 1px solid rgba(253,246,227,0.1);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.9rem; flex-shrink: 0;
+  }
+
+  .auth-form-panel {
+    background: var(--cream);
+    display: flex; align-items: center; justify-content: center;
+    padding: 56px;
+  }
+  .auth-form-box { width: 100%; max-width: 420px; }
+  .auth-form-box h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem; font-weight: 900; color: var(--earth);
+    margin-bottom: 4px;
+  }
+  .auth-form-box .sub {
+    font-size: 0.875rem; color: var(--muted); margin-bottom: 30px;
+  }
+  .auth-form-box .sub a { color: var(--leaf); text-decoration: none; font-weight: 600; }
+
+  .form-group { margin-bottom: 16px; }
+  .form-group label {
+    display: block; font-size: 0.77rem; font-weight: 600;
+    color: var(--soil); margin-bottom: 5px; letter-spacing: 0.4px;
+    text-transform: uppercase;
+  }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%; padding: 11px 14px;
+    border: 1.5px solid var(--border); border-radius: 8px;
+    background: var(--white); color: var(--earth);
+    font-size: 0.9rem; font-family: 'DM Sans', sans-serif;
+    transition: border-color 0.2s; outline: none;
+  }
+  .form-group input:focus, .form-group select:focus {
+    border-color: var(--ngo);
+    box-shadow: 0 0 0 3px rgba(123,63,0,0.08);
+  }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    padding: 10px 20px; border-radius: 7px; font-size: 0.875rem;
+    font-weight: 600; cursor: pointer; transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif; border: none;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-ngo { background: var(--ngo); color: var(--white); }
+  .btn-ngo:hover { background: var(--earth); }
+  .btn-primary { background: var(--leaf); color: var(--white); }
+  .btn-primary:hover { background: var(--earth); }
+  .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--soil); }
+  .btn-outline:hover { border-color: var(--ngo); color: var(--ngo); }
+  .btn-ghost { background: transparent; border: 1.5px solid var(--border); color: var(--muted); }
+  .btn-ghost:hover { border-color: var(--soil); color: var(--soil); }
+  .btn-danger-outline { background: transparent; border: 1.5px solid rgba(192,57,43,0.3); color: var(--danger); }
+  .btn-danger-outline:hover { background: var(--danger); color: white; }
+  .btn-approve { background: var(--leaf); color: white; }
+  .btn-approve:hover { background: #2D5A3D; }
+  .btn-full { width: 100%; padding: 13px; font-size: 1rem; border-radius: 8px; justify-content: center; }
+  .btn-sm { padding: 6px 13px; font-size: 0.77rem; }
+  .btn-xs { padding: 4px 10px; font-size: 0.72rem; border-radius: 5px; }
+
+  /* ══════════════════════════
+     PORTAL LAYOUT
+  ══════════════════════════ */
+  #view-portal .layout {
+    display: grid;
+    grid-template-columns: 256px 1fr;
+    grid-template-rows: 58px 1fr;
+    min-height: 100vh;
+  }
+
+  /* Topbar */
+  .topbar {
+    grid-column: 1 / -1;
+    background: var(--earth);
+    display: flex; align-items: center; padding: 0 24px; gap: 14px;
+    position: sticky; top: 0; z-index: 80;
+    border-bottom: 1px solid rgba(253,246,227,0.08);
+  }
+  .tb-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem; font-weight: 900;
+    color: var(--cream); text-decoration: none;
+  }
+  .tb-logo span { color: var(--wheat); }
+  .tb-badge {
+    background: rgba(212,168,83,0.15);
+    border: 1px solid rgba(212,168,83,0.25);
+    color: var(--wheat); font-size: 0.67rem;
+    font-weight: 700; padding: 2px 10px;
+    border-radius: 20px; letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .tb-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  .tb-notif {
+    width: 34px; height: 34px; border-radius: 8px;
+    background: rgba(253,246,227,0.07);
+    border: 1px solid rgba(253,246,227,0.1);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 1rem; position: relative;
+  }
+  .tb-dot {
+    position: absolute; top: 5px; right: 5px;
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--warning); border: 1.5px solid var(--earth);
+  }
+  .tb-user {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 14px 5px 5px;
+    background: rgba(253,246,227,0.07);
+    border: 1px solid rgba(253,246,227,0.1);
+    border-radius: 20px; cursor: pointer;
+  }
+  .tb-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--wheat), var(--warning));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.72rem; color: var(--earth); font-weight: 800;
+  }
+  .tb-uname { font-size: 0.82rem; font-weight: 600; color: var(--cream); }
+
+  /* Sidebar */
+  .sidebar {
+    background: #1E1208;
+    border-right: 1px solid rgba(253,246,227,0.06);
+    padding: 16px 10px;
+    display: flex; flex-direction: column;
+  }
+  .sl { font-size: 0.62rem; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; color: rgba(253,246,227,0.25);
+    padding: 14px 12px 6px; }
+  .si {
+    display: flex; align-items: center; gap: 9px;
+    padding: 9px 12px; border-radius: 8px; cursor: pointer;
+    font-size: 0.82rem; color: rgba(253,246,227,0.45);
+    transition: all 0.15s; text-decoration: none;
+  }
+  .si:hover { background: rgba(253,246,227,0.06); color: rgba(253,246,227,0.85); }
+  .si.active {
+    background: rgba(212,168,83,0.12);
+    color: var(--wheat); font-weight: 600;
+    border-left: 2px solid var(--wheat);
+    padding-left: 10px;
+  }
+  .si-icon { font-size: 1rem; width: 20px; text-align: center; flex-shrink: 0; }
+  .si-badge {
+    margin-left: auto; background: var(--warning);
+    color: white; font-size: 0.62rem; font-weight: 800;
+    padding: 1px 7px; border-radius: 10px;
+  }
+  .si-badge.urgent { background: var(--danger); animation: pulse-badge 2s infinite; }
+  @keyframes pulse-badge { 0%,100%{opacity:1} 50%{opacity:0.6} }
+  .sidebar-footer { margin-top: auto; padding-top: 12px; border-top: 1px solid rgba(253,246,227,0.07); }
+
+  /* Main */
+  .main {
+    background: var(--surface);
+    padding: 28px 32px;
+    overflow-y: auto;
+  }
+
+  /* Panels */
+  .panel { display: none; }
+  .panel.active { display: block; animation: fadeUp 0.28s ease; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+  /* Page header */
+  .ph { margin-bottom: 24px; }
+  .ph h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.65rem; font-weight: 900; color: var(--earth); letter-spacing: -0.4px;
+  }
+  .ph p { font-size: 0.875rem; color: var(--muted); margin-top: 3px; }
+  .ph-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+
+  /* Cards */
+  .card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 14px; padding: 20px 22px;
+    box-shadow: 0 2px 10px rgba(45,27,0,0.04);
+  }
+  .card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.95rem; font-weight: 700; color: var(--earth);
+    margin-bottom: 14px;
+  }
+
+  /* Stat cards */
+  .stats-row { display: grid; grid-template-columns: repeat(5,1fr); gap: 12px; margin-bottom: 22px; }
+  .sc {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px 18px;
+  }
+  .sc-i { font-size: 1.4rem; margin-bottom: 8px; }
+  .sc-l { font-size: 0.68rem; color: var(--muted); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 3px; }
+  .sc-v { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: var(--earth); }
+  .sc-s { font-size: 0.7rem; color: var(--leaf); margin-top: 2px; }
+  .sc-s.warn { color: var(--warning); }
+  .sc-s.danger { color: var(--danger); }
+
+  /* Tags */
+  .tag {
+    display: inline-block; padding: 3px 9px; border-radius: 20px;
+    font-size: 0.68rem; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase;
+  }
+  .tag-green { background: rgba(74,124,89,0.12); color: var(--leaf); }
+  .tag-gold { background: rgba(212,168,83,0.15); color: var(--soil); }
+  .tag-red { background: rgba(192,57,43,0.1); color: var(--danger); }
+  .tag-blue { background: rgba(168,197,218,0.25); color: #4A7C9A; }
+  .tag-grey { background: rgba(138,117,96,0.1); color: var(--muted); }
+  .tag-ngo { background: rgba(123,63,0,0.1); color: var(--ngo); }
+  .tag-warn { background: rgba(212,129,58,0.12); color: var(--warning); }
+
+  /* Progress */
+  .pb-wrap { margin: 8px 0 4px; }
+  .pb-lbl { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--muted); margin-bottom: 4px; }
+  .pb-lbl strong { color: var(--leaf); }
+  .pb { height: 6px; background: rgba(92,58,30,0.08); border-radius: 10px; overflow: hidden; }
+  .pb-fill { height: 100%; border-radius: 10px; background: linear-gradient(90deg, var(--sage), var(--leaf)); }
+
+  /* Tables */
+  .tbl { width: 100%; border-collapse: collapse; }
+  .tbl th {
+    font-size: 0.67rem; color: var(--muted); text-align: left;
+    padding: 8px 12px 10px; letter-spacing: 0.6px; font-weight: 600;
+    text-transform: uppercase; border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .tbl td { font-size: 0.82rem; padding: 11px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl tr:hover td { background: rgba(74,124,89,0.02); }
+  .tbl td strong { color: var(--earth); }
+
+  /* Alert */
+  .alert {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 12px 14px; border-radius: 10px; margin-bottom: 16px; border: 1px solid;
+    font-size: 0.82rem;
+  }
+  .alert-warn { background: rgba(212,129,58,0.07); border-color: rgba(212,129,58,0.3); }
+  .alert-danger { background: rgba(192,57,43,0.06); border-color: rgba(192,57,43,0.2); }
+  .alert-success { background: rgba(74,124,89,0.07); border-color: rgba(74,124,89,0.25); }
+  .alert-info { background: rgba(168,197,218,0.1); border-color: rgba(168,197,218,0.4); }
+  .alert-text p { line-height: 1.6; color: var(--earth); }
+
+  /* Two / three col */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .col-31 { display: grid; grid-template-columns: 1.8fr 1fr; gap: 18px; }
+
+  /* Application review card */
+  .app-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden; margin-bottom: 14px;
+    transition: box-shadow 0.2s;
+  }
+  .app-card:hover { box-shadow: 0 6px 24px rgba(45,27,0,0.08); }
+  .app-card-header {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+    background: #FFFDF7;
+  }
+  .app-avatar {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; flex-shrink: 0;
+  }
+  .app-info h4 { font-size: 0.92rem; font-weight: 700; color: var(--earth); }
+  .app-info p { font-size: 0.75rem; color: var(--muted); margin-top: 1px; }
+  .app-meta { margin-left: auto; text-align: right; }
+  .app-amount { font-family: 'DM Mono', monospace; font-size: 1.1rem; font-weight: 500; color: var(--earth); }
+  .app-card-body { padding: 14px 20px; }
+  .app-detail-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 14px; }
+  .app-detail { font-size: 0.75rem; }
+  .app-detail .lbl { color: var(--muted); margin-bottom: 2px; }
+  .app-detail .val { font-weight: 600; color: var(--earth); }
+  .app-card-actions {
+    display: flex; gap: 10px; padding: 12px 20px;
+    border-top: 1px solid var(--border); background: #FFFDF7;
+    align-items: center;
+  }
+
+  /* Donor management card */
+  .donor-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 0; border-bottom: 1px solid var(--border);
+  }
+  .donor-row:last-child { border-bottom: none; }
+  .donor-avatar-md {
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 700; color: white;
+    flex-shrink: 0;
+  }
+  .donor-info h5 { font-size: 0.85rem; font-weight: 600; color: var(--earth); }
+  .donor-info p { font-size: 0.72rem; color: var(--muted); }
+  .donor-stats { margin-left: auto; text-align: right; }
+  .donor-stats .amt { font-family: 'DM Mono', monospace; font-size: 0.9rem; font-weight: 500; color: var(--earth); }
+  .donor-stats .cnt { font-size: 0.7rem; color: var(--muted); }
+
+  /* Report / chart bars */
+  .bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 100px; padding-top: 8px; }
+  .bar-item { display: flex; flex-direction: column; align-items: center; flex: 1; gap: 4px; }
+  .bar { width: 100%; border-radius: 4px 4px 0 0; transition: height 0.4s ease; min-height: 4px; }
+  .bar-lbl { font-size: 0.62rem; color: var(--muted); }
+  .bar-val { font-size: 0.65rem; font-weight: 600; color: var(--soil); }
+
+  /* Disbursement steps */
+  .disb-step {
+    display: flex; align-items: flex-start; gap: 14px;
+    padding: 14px 16px; border-radius: 10px; border: 1px solid var(--border);
+    margin-bottom: 10px; background: var(--white);
+    transition: border-color 0.2s;
+  }
+  .disb-step:hover { border-color: var(--sage); }
+  .disb-num {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--leaf); color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; font-weight: 700; flex-shrink: 0;
+  }
+  .disb-num.pending { background: var(--warning); }
+  .disb-num.done { background: var(--leaf); }
+  .disb-content h5 { font-size: 0.85rem; font-weight: 600; color: var(--earth); }
+  .disb-content p { font-size: 0.75rem; color: var(--muted); margin-top: 2px; line-height: 1.5; }
+
+  /* Modal */
+  .overlay {
+    display: none; position: fixed; inset: 0; z-index: 200;
+    background: rgba(45,27,0,0.55); backdrop-filter: blur(4px);
+    align-items: center; justify-content: center;
+  }
+  .overlay.open { display: flex; }
+  .modal {
+    background: var(--white); border-radius: 18px;
+    padding: 28px 30px; width: 100%; max-width: 540px;
+    box-shadow: 0 28px 80px rgba(45,27,0,0.22);
+    animation: mIn 0.22s ease;
+  }
+  @keyframes mIn { from{opacity:0;transform:scale(0.95) translateY(10px)} to{opacity:1;transform:scale(1) translateY(0)} }
+  .modal-hdr { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; }
+  .modal-hdr h3 { font-family: 'Playfair Display', serif; font-size: 1.25rem; font-weight: 900; color: var(--earth); }
+  .modal-close {
+    width: 28px; height: 28px; border-radius: 50%; background: var(--surface);
+    border: none; cursor: pointer; font-size: 1rem; color: var(--muted);
+  }
+
+  /* Confirm/reject modal */
+  .confirm-farmer {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--surface); border-radius: 10px; padding: 12px 14px;
+    margin-bottom: 16px; border: 1px solid var(--border);
+  }
+  .confirm-farmer .fa { font-size: 1.6rem; }
+  .confirm-farmer h5 { font-size: 0.9rem; font-weight: 600; }
+  .confirm-farmer p { font-size: 0.75rem; color: var(--muted); }
+
+  /* Note rows */
+  .note-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.82rem; }
+  .note-row:last-child { border-bottom: none; }
+  .note-row .lbl { color: var(--muted); }
+  .note-row .val { font-weight: 600; color: var(--earth); }
+
+  /* Search & filter */
+  .filter-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 18px; }
+  .fc {
+    padding: 6px 14px; border-radius: 20px;
+    border: 1.5px solid var(--border); background: var(--white);
+    font-size: 0.78rem; font-weight: 600; color: var(--muted);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .fc:hover, .fc.active { background: var(--ngo); border-color: var(--ngo); color: white; }
+  .si-input {
+    padding: 7px 14px; border: 1.5px solid var(--border); border-radius: 20px;
+    background: var(--white); font-size: 0.82rem; font-family: 'DM Sans', sans-serif;
+    outline: none; color: var(--earth); width: 200px;
+  }
+  .si-input:focus { border-color: var(--ngo); }
+
+  /* Summary chip */
+  .sum-chip {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--ngo-light); border: 1px solid rgba(123,63,0,0.15);
+    border-radius: 8px; padding: 10px 14px;
+    font-size: 0.8rem; color: var(--ngo);
+  }
+  .sum-chip strong { font-size: 1rem; }
+
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+  @media(max-width:1000px) {
+    #view-auth.active { grid-template-columns: 1fr; }
+    .auth-panel { display: none; }
+    #view-portal .layout { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .stats-row { grid-template-columns: repeat(3,1fr); }
+    .two-col, .three-col, .col-31 { grid-template-columns: 1fr; }
+    .main { padding: 18px; }
+    .app-detail-row { grid-template-columns: repeat(2,1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════
+     AUTH
+═══════════════════════════ -->
+<div id="view-auth" class="view active">
+  <div class="auth-panel">
+    <div class="auth-hex"></div>
+    <div class="auth-brand">
+      <div class="auth-logo">Karz Track<span></span><small>NGO Admin Portal</small></div>
+    </div>
+    <div class="auth-content">
+      <h2>The <em>command centre</em> for rural lending.</h2>
+      <p>Review applications, manage disbursements, communicate with donors, and track every rupee — all in one powerful dashboard.</p>
+      <div class="auth-features">
+        <div class="auth-feat"><div class="auth-feat-icon">📋</div>Review & approve farmer applications</div>
+        <div class="auth-feat"><div class="auth-feat-icon">💚</div>Manage donor relationships & receipts</div>
+        <div class="auth-feat"><div class="auth-feat-icon">💸</div>Oversee disbursements & repayments</div>
+        <div class="auth-feat"><div class="auth-feat-icon">📊</div>Generate impact reports & analytics</div>
+      </div>
+    </div>
+    <div style="position:relative;z-index:1">
+      <a href="index.html" style="font-size:0.8rem;color:rgba(253,246,227,0.35);text-decoration:none">← Back to Karz Track</Track> Home</a>
+    </div>
+  </div>
+
+  <div class="auth-form-panel">
+    <div class="auth-form-box">
+      <h3>NGO Staff Login 🏢</h3>
+      <p class="sub">Authorised personnel only. <a href="#">Request access →</a></p>
+      <div class="form-group">
+        <label>NGO Email</label>
+        <input type="email" placeholder="meera@KarzTrack.org">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" placeholder="Enter your password">
+      </div>
+      <div class="form-group">
+        <label>Staff Role</label>
+        <select>
+          <option>Field Officer</option>
+          <option selected>NGO Manager</option>
+          <option>Finance Officer</option>
+          <option>Admin / Director</option>
+        </select>
+      </div>
+      <button class="btn btn-ngo btn-full" onclick="enterPortal()">Log In to NGO Portal</button>
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);text-align:center">
+        <a href="kisansetu.html" style="font-size:0.82rem;color:var(--muted);text-decoration:none">← Back to Karz Track Home</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════
+     PORTAL
+═══════════════════════════ -->
+<div id="view-portal" class="view">
+  <div class="layout">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <a href="kisansetu.html" class="tb-logo">Kisan<span>Setu</span></a>
+      <span class="tb-badge">NGO Admin</span>
+      <div style="height:20px;width:1px;background:rgba(253,246,227,0.1)"></div>
+      <span style="font-size:0.78rem;color:rgba(253,246,227,0.35)">GreenRoots Foundation, Raipur</span>
+      <div class="tb-right">
+        <div class="tb-notif" onclick="showPanel('notifications')">🔔<div class="tb-dot"></div></div>
+        <div class="tb-user">
+          <div class="tb-avatar">MG</div>
+          <span class="tb-uname">Meera Gupta</span>
+        </div>
+        <button class="btn btn-ghost btn-sm" style="border-color:rgba(253,246,227,0.15);color:rgba(253,246,227,0.45)" onclick="doLogout()">Log out</button>
+      </div>
+    </header>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sl">Overview</div>
+      <a class="si active" onclick="showPanel('dashboard')"><span class="si-icon">📊</span>Dashboard</a>
+
+      <div class="sl">Loan Management</div>
+      <a class="si" onclick="showPanel('applications')"><span class="si-icon">📋</span>Applications<span class="si-badge urgent">3</span></a>
+      <a class="si" onclick="showPanel('active-loans')"><span class="si-icon">💰</span>Active Loans</a>
+      <a class="si" onclick="showPanel('disbursements')"><span class="si-icon">💸</span>Disbursements</a>
+      <a class="si" onclick="showPanel('repayments')"><span class="si-icon">📅</span>Repayments</a>
+
+      <div class="sl">People</div>
+      <a class="si" onclick="showPanel('farmers')"><span class="si-icon">👨‍🌾</span>Farmers</a>
+      <a class="si" onclick="showPanel('donors')"><span class="si-icon">💚</span>Donors<span class="si-badge">2</span></a>
+
+      <div class="sl">Reports</div>
+      <a class="si" onclick="showPanel('reports')"><span class="si-icon">📈</span>Impact Reports</a>
+      <a class="si" onclick="showPanel('notifications')"><span class="si-icon">🔔</span>Notifications</a>
+
+      <div class="sidebar-footer">
+        <a class="si" href="kisansetu.html"><span class="si-icon">🌐</span>Website</a>
+        <a class="si" onclick="doLogout()"><span class="si-icon">🚪</span>Log Out</a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main">
+
+      <!-- ── DASHBOARD ── -->
+      <div class="panel active" id="panel-dashboard">
+        <div class="ph-row">
+          <div class="ph" style="margin-bottom:0">
+            <h2>Good morning, Meera 🌾</h2>
+            <p>Friday, March 13, 2026 · GreenRoots Foundation, Raipur</p>
+          </div>
+          <div style="display:flex;gap:10px">
+            <button class="btn btn-outline btn-sm" onclick="showPanel('reports')">📊 Reports</button>
+            <button class="btn btn-ngo btn-sm" onclick="showPanel('applications')">Review Applications →</button>
+          </div>
+        </div>
+        <div style="height:20px"></div>
+
+        <div class="alert alert-danger">
+          <span style="font-size:1.1rem;flex-shrink:0">🚨</span>
+          <div class="alert-text"><p><strong>3 applications pending review</strong> — Ramesh Kumar, Lakshmi Bai, and Dinesh Patel have been waiting over 24 hours. Please action them today.</p></div>
+        </div>
+
+        <div class="stats-row">
+          <div class="sc"><div class="sc-i">📋</div><div class="sc-l">Pending Review</div><div class="sc-v" style="color:var(--danger)">3</div><div class="sc-s danger">Action needed</div></div>
+          <div class="sc"><div class="sc-i">💰</div><div class="sc-l">Active Loans</div><div class="sc-v">142</div><div class="sc-s">↑ 8 this week</div></div>
+          <div class="sc"><div class="sc-i">💸</div><div class="sc-l">Funds Raised</div><div class="sc-v">₹48L</div><div class="sc-s">↑ ₹2.1L this month</div></div>
+          <div class="sc"><div class="sc-i">📅</div><div class="sc-l">Overdue</div><div class="sc-v" style="color:var(--warning)">4</div><div class="sc-s warn">Needs follow-up</div></div>
+          <div class="sc"><div class="sc-i">✅</div><div class="sc-l">Repayment Rate</div><div class="sc-v">94%</div><div class="sc-s">↑ 2% YoY</div></div>
+        </div>
+
+        <div class="col-31" style="margin-bottom:18px">
+          <!-- Recent applications -->
+          <div class="card">
+            <div class="card-title">Pending Applications</div>
+            <table class="tbl">
+              <thead><tr><th>Farmer</th><th>Amount</th><th>Purpose</th><th>Wait</th><th>Action</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><strong>Ramesh Kumar</strong><br><span style="font-size:0.7rem;color:var(--muted)">Raipur, CG</span></td>
+                  <td style="font-family:'DM Mono',monospace">₹25,000</td>
+                  <td><span class="tag tag-gold">Seeds</span></td>
+                  <td style="color:var(--danger);font-size:0.75rem">36 hrs</td>
+                  <td><button class="btn btn-xs btn-ngo" onclick="openApproveModal('Ramesh Kumar','🌾','Raipur, CG','Seeds & Planting','25000')">Review</button></td>
+                </tr>
+                <tr>
+                  <td><strong>Lakshmi Bai</strong><br><span style="font-size:0.7rem;color:var(--muted)">Bhubaneswar, OD</span></td>
+                  <td style="font-family:'DM Mono',monospace">₹15,000</td>
+                  <td><span class="tag tag-teal" style="background:rgba(42,127,138,0.1);color:var(--teal)">Seeds</span></td>
+                  <td style="color:var(--warning);font-size:0.75rem">28 hrs</td>
+                  <td><button class="btn btn-xs btn-ngo" onclick="openApproveModal('Lakshmi Bai','🍚','Bhubaneswar, OD','Seed Loan','15000')">Review</button></td>
+                </tr>
+                <tr>
+                  <td><strong>Dinesh Patel</strong><br><span style="font-size:0.7rem;color:var(--muted)">Surat, GJ</span></td>
+                  <td style="font-family:'DM Mono',monospace">₹35,000</td>
+                  <td><span class="tag tag-blue">Equipment</span></td>
+                  <td style="color:var(--warning);font-size:0.75rem">12 hrs</td>
+                  <td><button class="btn btn-xs btn-ngo" onclick="openApproveModal('Dinesh Patel','🚜','Surat, GJ','Equipment Loan','35000')">Review</button></td>
+                </tr>
+              </tbody>
+            </table>
+            <button class="btn btn-ghost" style="width:100%;margin-top:12px;padding:8px;font-size:0.8rem" onclick="showPanel('applications')">View All Applications →</button>
+          </div>
+
+          <!-- Quick stats -->
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="card">
+              <div class="card-title" style="margin-bottom:10px">Funding Progress</div>
+              <div style="margin-bottom:8px">
+                <div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:4px"><span style="color:var(--muted)">This month</span><strong>₹2.1L / ₹3L</strong></div>
+                <div class="pb"><div class="pb-fill" style="width:70%"></div></div>
+              </div>
+              <div style="font-size:0.75rem;color:var(--muted)">70% of monthly target achieved</div>
+            </div>
+            <div class="card">
+              <div class="card-title" style="margin-bottom:10px">Active Donors</div>
+              <div style="font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:700;color:var(--earth)">630</div>
+              <div style="font-size:0.75rem;color:var(--leaf)">↑ 14 new this week</div>
+              <button class="btn btn-outline btn-sm" style="margin-top:10px;width:100%" onclick="showPanel('donors')">Manage Donors →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Monthly bar chart -->
+        <div class="two-col">
+          <div class="card">
+            <div class="card-title">Monthly Disbursements (₹ Lakhs)</div>
+            <div class="bar-chart">
+              <div class="bar-item"><div class="bar-val">1.8</div><div class="bar" style="height:55px;background:var(--sage)"></div><div class="bar-lbl">Sep</div></div>
+              <div class="bar-item"><div class="bar-val">2.1</div><div class="bar" style="height:65px;background:var(--sage)"></div><div class="bar-lbl">Oct</div></div>
+              <div class="bar-item"><div class="bar-val">1.6</div><div class="bar" style="height:50px;background:var(--sage)"></div><div class="bar-lbl">Nov</div></div>
+              <div class="bar-item"><div class="bar-val">2.4</div><div class="bar" style="height:75px;background:var(--sage)"></div><div class="bar-lbl">Dec</div></div>
+              <div class="bar-item"><div class="bar-val">1.9</div><div class="bar" style="height:60px;background:var(--sage)"></div><div class="bar-lbl">Jan</div></div>
+              <div class="bar-item"><div class="bar-val">2.2</div><div class="bar" style="height:68px;background:var(--sage)"></div><div class="bar-lbl">Feb</div></div>
+              <div class="bar-item"><div class="bar-val">2.1</div><div class="bar" style="height:65px;background:linear-gradient(to top,var(--leaf),var(--sage))"></div><div class="bar-lbl">Mar</div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Repayment Overview</div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:4px"><span style="color:var(--muted)">On-time</span><strong style="color:var(--leaf)">94%</strong></div>
+                <div class="pb"><div class="pb-fill" style="width:94%"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:4px"><span style="color:var(--muted)">Late (1–30 days)</span><strong style="color:var(--warning)">4%</strong></div>
+                <div class="pb"><div class="pb-fill" style="width:4%;background:var(--warning)"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:4px"><span style="color:var(--muted)">Defaulted</span><strong style="color:var(--danger)">2%</strong></div>
+                <div class="pb"><div class="pb-fill" style="width:2%;background:var(--danger)"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── APPLICATIONS ── -->
+      <div class="panel" id="panel-applications">
+        <div class="ph-row">
+          <div class="ph" style="margin-bottom:0"><h2>Loan Applications</h2><p>Review, verify, and approve or reject farmer applications</p></div>
+        </div>
+        <div style="height:18px"></div>
+
+        <div class="filter-bar">
+          <input class="si-input" placeholder="🔍 Search applicant…">
+          <div class="fc active" onclick="setF(this)">Pending (3)</div>
+          <div class="fc" onclick="setF(this)">Approved</div>
+          <div class="fc" onclick="setF(this)">Rejected</div>
+          <div class="fc" onclick="setF(this)">All</div>
+        </div>
+
+        <!-- App 1 -->
+        <div class="app-card">
+          <div class="app-card-header">
+            <div class="app-avatar" style="background:rgba(74,124,89,0.1)">🌾</div>
+            <div class="app-info">
+              <h4>Ramesh Kumar</h4>
+              <p>Applied Mar 11, 2026 · APP-2026-00847 · Waiting 36 hrs</p>
+            </div>
+            <div class="app-meta">
+              <div class="app-amount">₹25,000</div>
+              <span class="tag tag-red" style="margin-top:4px;display:inline-block">Urgent</span>
+            </div>
+          </div>
+          <div class="app-card-body">
+            <div class="app-detail-row">
+              <div class="app-detail"><div class="lbl">Purpose</div><div class="val">Seeds & Planting</div></div>
+              <div class="app-detail"><div class="lbl">Location</div><div class="val">Raipur, CG</div></div>
+              <div class="app-detail"><div class="lbl">Land</div><div class="val">2.5 acres</div></div>
+              <div class="app-detail"><div class="lbl">Term</div><div class="val">6 months</div></div>
+            </div>
+            <div class="app-detail-row">
+              <div class="app-detail"><div class="lbl">Aadhaar</div><div class="val">Uploaded ✓</div></div>
+              <div class="app-detail"><div class="lbl">Land Record</div><div class="val">Uploaded ✓</div></div>
+              <div class="app-detail"><div class="lbl">Bank Passbook</div><div class="val">Uploaded ✓</div></div>
+              <div class="app-detail"><div class="lbl">Past Loans</div><div class="val">2 repaid (100%)</div></div>
+            </div>
+            <div style="background:var(--surface);border-radius:8px;padding:10px 12px;font-size:0.8rem;color:var(--muted);border:1px solid var(--border)">
+              📝 "I need kharif paddy seeds for 2.5 acres this season. Both my previous loans were repaid on time."
+            </div>
+          </div>
+          <div class="app-card-actions">
+            <button class="btn btn-outline btn-sm">📁 View Documents</button>
+            <button class="btn btn-outline btn-sm">📞 Call Farmer</button>
+            <div style="margin-left:auto;display:flex;gap:8px">
+              <button class="btn btn-danger-outline btn-sm" onclick="openRejectModal('Ramesh Kumar')">✕ Reject</button>
+              <button class="btn btn-approve btn-sm" onclick="openApproveModal('Ramesh Kumar','🌾','Raipur, CG','Seeds & Planting','25000')">✓ Approve</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- App 2 -->
+        <div class="app-card">
+          <div class="app-card-header">
+            <div class="app-avatar" style="background:rgba(168,197,218,0.2)">🍚</div>
+            <div class="app-info">
+              <h4>Lakshmi Bai</h4>
+              <p>Applied Mar 12, 2026 · APP-2026-00851 · Waiting 28 hrs · First-time applicant</p>
+            </div>
+            <div class="app-meta">
+              <div class="app-amount">₹15,000</div>
+              <span class="tag tag-gold" style="margin-top:4px;display:inline-block">New</span>
+            </div>
+          </div>
+          <div class="app-card-body">
+            <div class="app-detail-row">
+              <div class="app-detail"><div class="lbl">Purpose</div><div class="val">Certified Seeds</div></div>
+              <div class="app-detail"><div class="lbl">Location</div><div class="val">Bhubaneswar, OD</div></div>
+              <div class="app-detail"><div class="lbl">Land</div><div class="val">1 acre</div></div>
+              <div class="app-detail"><div class="lbl">Term</div><div class="val">3 months</div></div>
+            </div>
+            <div class="app-detail-row">
+              <div class="app-detail"><div class="lbl">Aadhaar</div><div class="val">Uploaded ✓</div></div>
+              <div class="app-detail"><div class="lbl">Land Record</div><div class="val">Uploaded ✓</div></div>
+              <div class="app-detail"><div class="lbl">Bank Passbook</div><div class="val">Pending ⚠️</div></div>
+              <div class="app-detail"><div class="lbl">Past Loans</div><div class="val">First application</div></div>
+            </div>
+            <div class="alert alert-warn" style="margin-bottom:0;margin-top:8px">
+              <span>⚠️</span><div class="alert-text"><p>Bank passbook not uploaded. Consider scheduling a field visit before approval.</p></div>
+            </div>
+          </div>
+          <div class="app-card-actions">
+            <button class="btn btn-outline btn-sm">📁 View Documents</button>
+            <button class="btn btn-ngo btn-sm">🏠 Schedule Visit</button>
+            <div style="margin-left:auto;display:flex;gap:8px">
+              <button class="btn btn-danger-outline btn-sm" onclick="openRejectModal('Lakshmi Bai')">✕ Reject</button>
+              <button class="btn btn-approve btn-sm" onclick="openApproveModal('Lakshmi Bai','🍚','Bhubaneswar, OD','Seed Loan','15000')">✓ Approve</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- App 3 -->
+        <div class="app-card">
+          <div class="app-card-header">
+            <div class="app-avatar" style="background:rgba(212,168,83,0.12)">🚜</div>
+            <div class="app-info">
+              <h4>Dinesh Patel</h4>
+              <p>Applied Mar 13, 2026 · APP-2026-00858 · Waiting 12 hrs</p>
+            </div>
+            <div class="app-meta">
+              <div class="app-amount">₹35,000</div>
+              <span class="tag tag-blue" style="margin-top:4px;display:inline-block">Equipment</span>
+            </div>
+          </div>
+          <div class="app-card-body">
+            <div class="app-detail-row">
+              <div class="app-detail"><div class="lbl">Purpose</div><div class="val">Tractor Attachment</div></div>
+              <div class="app-detail"><div class="lbl">Location</div><div class="val">Surat, GJ</div></div>
+              <div class="app-detail"><div class="lbl">Land</div><div class="val">4 acres</div></div>
+              <div class="app-detail"><div class="lbl">Term</div><div class="val">12 months</div></div>
+            </div>
+            <div class="app-detail-row">
+              <div class="app-detail"><div class="lbl">Aadhaar</div><div class="val">Uploaded ✓</div></div>
+              <div class="app-detail"><div class="lbl">Land Record</div><div class="val">Uploaded ✓</div></div>
+              <div class="app-detail"><div class="lbl">Bank Passbook</div><div class="val">Uploaded ✓</div></div>
+              <div class="app-detail"><div class="lbl">Past Loans</div><div class="val">1 repaid (100%)</div></div>
+            </div>
+          </div>
+          <div class="app-card-actions">
+            <button class="btn btn-outline btn-sm">📁 View Documents</button>
+            <button class="btn btn-outline btn-sm">📞 Call Farmer</button>
+            <div style="margin-left:auto;display:flex;gap:8px">
+              <button class="btn btn-danger-outline btn-sm" onclick="openRejectModal('Dinesh Patel')">✕ Reject</button>
+              <button class="btn btn-approve btn-sm" onclick="openApproveModal('Dinesh Patel','🚜','Surat, GJ','Equipment Loan','35000')">✓ Approve</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ACTIVE LOANS ── -->
+      <div class="panel" id="panel-active-loans">
+        <div class="ph"><h2>Active Loans</h2><p>All currently disbursed and running loans</p></div>
+        <div class="card">
+          <table class="tbl">
+            <thead><tr><th>Farmer</th><th>Amount</th><th>Purpose</th><th>Progress</th><th>Next Due</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><strong>Ramesh Kumar</strong><br><span style="font-size:0.7rem;color:var(--muted)">Raipur, CG</span></td>
+                <td style="font-family:'DM Mono',monospace">₹25,000</td>
+                <td><span class="tag tag-gold">Seeds</span></td>
+                <td style="min-width:120px"><div class="pb" style="margin-bottom:3px"><div class="pb-fill" style="width:30%"></div></div><span style="font-size:0.7rem;color:var(--muted)">30%</span></td>
+                <td style="font-size:0.8rem">Mar 18</td>
+                <td><span class="tag tag-warn">Due Soon</span></td>
+              </tr>
+              <tr>
+                <td><strong>Priya Devi</strong><br><span style="font-size:0.7rem;color:var(--muted)">Patna, BR</span></td>
+                <td style="font-family:'DM Mono',monospace">₹18,000</td>
+                <td><span class="tag tag-blue">Irrigation</span></td>
+                <td style="min-width:120px"><div class="pb" style="margin-bottom:3px"><div class="pb-fill" style="width:60%"></div></div><span style="font-size:0.7rem;color:var(--muted)">60%</span></td>
+                <td style="font-size:0.8rem">Apr 2</td>
+                <td><span class="tag tag-green">On Track</span></td>
+              </tr>
+              <tr>
+                <td><strong>Suresh Yadav</strong><br><span style="font-size:0.7rem;color:var(--muted)">Lucknow, UP</span></td>
+                <td style="font-family:'DM Mono',monospace">₹40,000</td>
+                <td><span class="tag tag-blue">Equipment</span></td>
+                <td style="min-width:120px"><div class="pb" style="margin-bottom:3px"><div class="pb-fill" style="width:15%"></div></div><span style="font-size:0.7rem;color:var(--muted)">15%</span></td>
+                <td style="font-size:0.8rem">Mar 30</td>
+                <td><span class="tag tag-green">On Track</span></td>
+              </tr>
+              <tr>
+                <td><strong>Manoj Pandey</strong><br><span style="font-size:0.7rem;color:var(--muted)">Varanasi, UP</span></td>
+                <td style="font-family:'DM Mono',monospace">₹20,000</td>
+                <td><span class="tag tag-gold">Seeds</span></td>
+                <td style="min-width:120px"><div class="pb" style="margin-bottom:3px"><div class="pb-fill" style="width:80%"></div></div><span style="font-size:0.7rem;color:var(--muted)">80%</span></td>
+                <td style="font-size:0.8rem">Apr 10</td>
+                <td><span class="tag tag-green">On Track</span></td>
+              </tr>
+              <tr>
+                <td><strong>Geeta Sharma</strong><br><span style="font-size:0.7rem;color:var(--muted)">Bhopal, MP</span></td>
+                <td style="font-family:'DM Mono',monospace">₹12,000</td>
+                <td><span class="tag tag-ngo">Fertilizer</span></td>
+                <td style="min-width:120px"><div class="pb" style="margin-bottom:3px"><div class="pb-fill" style="width:0%;background:var(--danger)"></div></div><span style="font-size:0.7rem;color:var(--muted)">Awaiting funds</span></td>
+                <td style="font-size:0.8rem">—</td>
+                <td><span class="tag tag-gold">Funding</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── DISBURSEMENTS ── -->
+      <div class="panel" id="panel-disbursements">
+        <div class="ph"><h2>Disbursements</h2><p>Track and initiate fund disbursements to farmers</p></div>
+
+        <div class="alert alert-info">
+          <span style="font-size:1.1rem;flex-shrink:0">ℹ️</span>
+          <div class="alert-text"><p><strong>2 loans</strong> are fully funded and ready for disbursement. Please initiate transfers within 48 hours of full funding.</p></div>
+        </div>
+
+        <div class="two-col">
+          <div>
+            <h4 style="font-family:'Playfair Display',serif;font-size:1rem;margin-bottom:14px;color:var(--earth)">Ready to Disburse</h4>
+            <div class="disb-step">
+              <div class="disb-num">1</div>
+              <div class="disb-content" style="flex:1">
+                <h5>Priya Devi — ₹18,000</h5>
+                <p>Irrigation loan · Patna, Bihar · SBI Account XXXX8821<br>Fully funded Mar 12 · Waiting 26 hrs</p>
+                <button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="showDisbModal('Priya Devi','18000')">Initiate Transfer →</button>
+              </div>
+            </div>
+            <div class="disb-step">
+              <div class="disb-num">2</div>
+              <div class="disb-content" style="flex:1">
+                <h5>Kavitha R. — ₹15,000</h5>
+                <p>Irrigation loan · Thrissur, Kerala · Canara XXXX4421<br>Fully funded Mar 11 · Waiting 48 hrs</p>
+                <button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="showDisbModal('Kavitha R.','15000')">Initiate Transfer →</button>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h4 style="font-family:'Playfair Display',serif;font-size:1rem;margin-bottom:14px;color:var(--earth)">Recent Disbursements</h4>
+            <table class="tbl">
+              <thead><tr><th>Farmer</th><th>Amount</th><th>Date</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Ramesh K.</strong></td><td style="font-family:'DM Mono',monospace">₹25,000</td><td style="font-size:0.75rem">Dec 14</td><td><span class="tag tag-green">Done</span></td></tr>
+                <tr><td><strong>Suresh Y.</strong></td><td style="font-family:'DM Mono',monospace">₹40,000</td><td style="font-size:0.75rem">Jan 28</td><td><span class="tag tag-green">Done</span></td></tr>
+                <tr><td><strong>Mohan P.</strong></td><td style="font-family:'DM Mono',monospace">₹30,000</td><td style="font-size:0.75rem">Feb 5</td><td><span class="tag tag-green">Done</span></td></tr>
+                <tr><td><strong>Geeta S.</strong></td><td style="font-family:'DM Mono',monospace">₹12,000</td><td style="font-size:0.75rem">Pending</td><td><span class="tag tag-gold">Funding</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── REPAYMENTS ── -->
+      <div class="panel" id="panel-repayments">
+        <div class="ph"><h2>Repayments</h2><p>Track all incoming repayments from farmers</p></div>
+        <div class="alert alert-warn">
+          <span style="font-size:1.1rem;flex-shrink:0">⏰</span>
+          <div class="alert-text"><p><strong>4 overdue repayments</strong> need follow-up. Consider sending SMS reminders or scheduling field visits.</p></div>
+        </div>
+        <div class="card">
+          <table class="tbl">
+            <thead><tr><th>Farmer</th><th>Instalment</th><th>Due Date</th><th>Amount</th><th>Paid On</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Ramesh K.</strong></td><td>#4</td><td>Mar 18</td><td style="font-family:'DM Mono',monospace">₹2,500</td><td>—</td><td><span class="tag tag-warn">Due Soon</span></td><td><button class="btn btn-xs btn-outline">📲 Remind</button></td></tr>
+              <tr><td><strong>Suresh Y.</strong></td><td>#2</td><td>Mar 30</td><td style="font-family:'DM Mono',monospace">₹3,334</td><td>—</td><td><span class="tag tag-grey">Upcoming</span></td><td>—</td></tr>
+              <tr><td><strong>Arun Mehta</strong></td><td>#3</td><td>Mar 1</td><td style="font-family:'DM Mono',monospace">₹1,800</td><td>—</td><td><span class="tag tag-red">Overdue</span></td><td><button class="btn btn-xs btn-danger-outline">🚨 Follow Up</button></td></tr>
+              <tr><td><strong>Sita Devi</strong></td><td>#2</td><td>Feb 28</td><td style="font-family:'DM Mono',monospace">₹2,000</td><td>—</td><td><span class="tag tag-red">Overdue</span></td><td><button class="btn btn-xs btn-danger-outline">🚨 Follow Up</button></td></tr>
+              <tr><td><strong>Priya D.</strong></td><td>#3</td><td>Mar 5</td><td style="font-family:'DM Mono',monospace">₹1,500</td><td>Mar 4</td><td><span class="tag tag-green">Paid ✓</span></td><td>—</td></tr>
+              <tr><td><strong>Manoj P.</strong></td><td>#8</td><td>Mar 10</td><td style="font-family:'DM Mono',monospace">₹1,667</td><td>Mar 10</td><td><span class="tag tag-green">Paid ✓</span></td><td>—</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── FARMERS ── -->
+      <div class="panel" id="panel-farmers">
+        <div class="ph-row">
+          <div class="ph" style="margin-bottom:0"><h2>Farmer Registry</h2><p>All registered farmers in GreenRoots network</p></div>
+          <button class="btn btn-ngo btn-sm">+ Add Farmer</button>
+        </div>
+        <div style="height:16px"></div>
+        <div class="filter-bar">
+          <input class="si-input" placeholder="🔍 Search farmer…">
+          <div class="fc active" onclick="setF(this)">All (248)</div>
+          <div class="fc" onclick="setF(this)">Active Loan</div>
+          <div class="fc" onclick="setF(this)">Repaid</div>
+          <div class="fc" onclick="setF(this)">New</div>
+        </div>
+        <div class="card">
+          <table class="tbl">
+            <thead><tr><th>Farmer</th><th>Location</th><th>Land</th><th>Total Loans</th><th>Total Borrowed</th><th>Repayment</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Ramesh Kumar</strong><br><span style="font-size:0.7rem;color:var(--muted)">ID: KS-4821</span></td><td>Raipur, CG</td><td>2.5 ac</td><td>3</td><td style="font-family:'DM Mono',monospace">₹48,000</td><td><span style="color:var(--leaf);font-weight:600">100%</span></td><td><span class="tag tag-gold">Active</span></td></tr>
+              <tr><td><strong>Priya Devi</strong><br><span style="font-size:0.7rem;color:var(--muted)">ID: KS-5012</span></td><td>Patna, BR</td><td>1.5 ac</td><td>2</td><td style="font-family:'DM Mono',monospace">₹33,000</td><td><span style="color:var(--leaf);font-weight:600">100%</span></td><td><span class="tag tag-gold">Active</span></td></tr>
+              <tr><td><strong>Suresh Yadav</strong><br><span style="font-size:0.7rem;color:var(--muted)">ID: KS-4290</span></td><td>Lucknow, UP</td><td>4 ac</td><td>2</td><td style="font-family:'DM Mono',monospace">₹55,000</td><td><span style="color:var(--leaf);font-weight:600">100%</span></td><td><span class="tag tag-gold">Active</span></td></tr>
+              <tr><td><strong>Anil Verma</strong><br><span style="font-size:0.7rem;color:var(--muted)">ID: KS-3812</span></td><td>Nagpur, MH</td><td>3 ac</td><td>4</td><td style="font-family:'DM Mono',monospace">₹60,000</td><td><span style="color:var(--leaf);font-weight:600">100%</span></td><td><span class="tag tag-green">Repaid</span></td></tr>
+              <tr><td><strong>Sita Devi</strong><br><span style="font-size:0.7rem;color:var(--muted)">ID: KS-5198</span></td><td>Patna, BR</td><td>1 ac</td><td>1</td><td style="font-family:'DM Mono',monospace">₹10,000</td><td><span style="color:var(--danger);font-weight:600">Overdue</span></td><td><span class="tag tag-red">Overdue</span></td></tr>
+              <tr><td><strong>Lakshmi Bai</strong><br><span style="font-size:0.7rem;color:var(--muted)">ID: —</span></td><td>Bhubaneswar, OD</td><td>1 ac</td><td>0</td><td style="font-family:'DM Mono',monospace">—</td><td>—</td><td><span class="tag tag-blue">Pending</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── DONORS ── -->
+      <div class="panel" id="panel-donors">
+        <div class="ph-row">
+          <div class="ph" style="margin-bottom:0"><h2>Donor Management</h2><p>Manage relationships with individual and corporate donors</p></div>
+          <button class="btn btn-ngo btn-sm">+ Add Donor</button>
+        </div>
+        <div style="height:16px"></div>
+
+        <div class="alert alert-success">
+          <span style="font-size:1.1rem;flex-shrink:0">💚</span>
+          <div class="alert-text"><p><strong>2 new donors</strong> registered this week — Ravi Shankar (Pune) and GreenFuture Corp (Delhi). Consider sending a welcome message.</p></div>
+        </div>
+
+        <div class="two-col">
+          <div class="card">
+            <div class="card-title">Top Donors This Month</div>
+            <div class="donor-row">
+              <div class="donor-avatar-md" style="background:#2A7F8A">AS</div>
+              <div class="donor-info"><h5>Anjali Shah</h5><p>Mumbai · 12 active loans · Gold</p></div>
+              <div class="donor-stats"><div class="amt">₹45,000</div><div class="cnt">3 loans this month</div></div>
+            </div>
+            <div class="donor-row">
+              <div class="donor-avatar-md" style="background:#4A7C59">GF</div>
+              <div class="donor-info"><h5>GreenFuture Corp</h5><p>Delhi · Corporate · New this week</p></div>
+              <div class="donor-stats"><div class="amt">₹1,20,000</div><div class="cnt">5 loans this month</div></div>
+            </div>
+            <div class="donor-row">
+              <div class="donor-avatar-md" style="background:#7B3F00">RM</div>
+              <div class="donor-info"><h5>Rahul Mehta</h5><p>Pune · 6 active loans · Silver</p></div>
+              <div class="donor-stats"><div class="amt">₹28,500</div><div class="cnt">2 loans this month</div></div>
+            </div>
+            <div class="donor-row">
+              <div class="donor-avatar-md" style="background:#5C3A1E">PN</div>
+              <div class="donor-info"><h5>Priya Nair</h5><p>Kochi · 3 active loans</p></div>
+              <div class="donor-stats"><div class="amt">₹15,000</div><div class="cnt">1 loan this month</div></div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="card">
+              <div class="card-title" style="margin-bottom:10px">Donor Overview</div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;justify-content:space-between;font-size:0.82rem;padding:6px 0;border-bottom:1px solid var(--border)"><span style="color:var(--muted)">Total donors</span><strong>630</strong></div>
+                <div style="display:flex;justify-content:space-between;font-size:0.82rem;padding:6px 0;border-bottom:1px solid var(--border)"><span style="color:var(--muted)">Active this month</span><strong style="color:var(--leaf)">84</strong></div>
+                <div style="display:flex;justify-content:space-between;font-size:0.82rem;padding:6px 0;border-bottom:1px solid var(--border)"><span style="color:var(--muted)">Corporate donors</span><strong>12</strong></div>
+                <div style="display:flex;justify-content:space-between;font-size:0.82rem;padding:6px 0"><span style="color:var(--muted)">New this week</span><strong style="color:var(--teal)">2</strong></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title" style="margin-bottom:12px">Donor Actions</div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <button class="btn btn-ngo" style="width:100%;padding:10px;justify-content:center">📧 Send Monthly Report</button>
+                <button class="btn btn-outline" style="width:100%;padding:10px;justify-content:center">🧾 Generate 80G Receipts</button>
+                <button class="btn btn-ghost" style="width:100%;padding:10px;justify-content:center">📊 Export Donor List</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- All donors table -->
+        <div class="card" style="margin-top:18px">
+          <div class="card-title">All Donors</div>
+          <table class="tbl">
+            <thead><tr><th>Donor</th><th>Type</th><th>City</th><th>Total Donated</th><th>Active Loans</th><th>Last Donation</th><th>Tier</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Anjali Shah</strong></td><td>Individual</td><td>Mumbai</td><td style="font-family:'DM Mono',monospace">₹45,000</td><td>5</td><td>Mar 5</td><td><span class="tag tag-gold">Gold</span></td></tr>
+              <tr><td><strong>GreenFuture Corp</strong></td><td>Corporate</td><td>Delhi</td><td style="font-family:'DM Mono',monospace">₹1,20,000</td><td>8</td><td>Mar 10</td><td><span class="tag tag-gold">Gold</span></td></tr>
+              <tr><td><strong>Rahul Mehta</strong></td><td>Individual</td><td>Pune</td><td style="font-family:'DM Mono',monospace">₹28,500</td><td>3</td><td>Feb 28</td><td><span class="tag tag-blue">Silver</span></td></tr>
+              <tr><td><strong>Priya Nair</strong></td><td>Individual</td><td>Kochi</td><td style="font-family:'DM Mono',monospace">₹15,000</td><td>2</td><td>Feb 15</td><td><span class="tag tag-grey">Bronze</span></td></tr>
+              <tr><td><strong>Ravi Shankar</strong></td><td>Individual</td><td>Pune</td><td style="font-family:'DM Mono',monospace">₹5,000</td><td>1</td><td>Mar 12</td><td><span class="tag tag-green">New</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── REPORTS ── -->
+      <div class="panel" id="panel-reports">
+        <div class="ph"><h2>Impact Reports</h2><p>Platform-wide analytics and downloadable reports</p></div>
+        <div class="three-col" style="margin-bottom:20px">
+          <div class="card" style="text-align:center">
+            <div style="font-size:2.2rem;margin-bottom:6px">👨‍🌾</div>
+            <div style="font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:700">2,412</div>
+            <div style="font-size:0.78rem;color:var(--muted);margin-top:4px">Farmers Supported</div>
+          </div>
+          <div class="card" style="text-align:center">
+            <div style="font-size:2.2rem;margin-bottom:6px">💸</div>
+            <div style="font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:700">₹2.4Cr</div>
+            <div style="font-size:0.78rem;color:var(--muted);margin-top:4px">Total Disbursed</div>
+          </div>
+          <div class="card" style="text-align:center">
+            <div style="font-size:2.2rem;margin-bottom:6px">♻️</div>
+            <div style="font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:700">94%</div>
+            <div style="font-size:0.78rem;color:var(--muted);margin-top:4px">Repayment Rate</div>
+          </div>
+        </div>
+        <div class="two-col">
+          <div class="card">
+            <div class="card-title">Download Reports</div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div class="disb-step" style="cursor:pointer">
+                <div class="disb-num" style="background:var(--ngo)">📊</div>
+                <div class="disb-content"><h5>Monthly Impact Report — March 2026</h5><p>Full summary of loans, disbursements, repayments, and donor activity</p></div>
+                <button class="btn btn-outline btn-sm">⬇ PDF</button>
+              </div>
+              <div class="disb-step" style="cursor:pointer">
+                <div class="disb-num" style="background:var(--teal)">🧾</div>
+                <div class="disb-content"><h5>80G Donor Receipts — Q4 FY26</h5><p>Bulk export of all tax receipts for donors this quarter</p></div>
+                <button class="btn btn-outline btn-sm">⬇ ZIP</button>
+              </div>
+              <div class="disb-step" style="cursor:pointer">
+                <div class="disb-num" style="background:var(--leaf)">📋</div>
+                <div class="disb-content"><h5>Farmer Registry Export</h5><p>CSV of all registered farmers, loan history, and repayment status</p></div>
+                <button class="btn btn-outline btn-sm">⬇ CSV</button>
+              </div>
+              <div class="disb-step" style="cursor:pointer">
+                <div class="disb-num" style="background:var(--warning)">💰</div>
+                <div class="disb-content"><h5>Financial Audit Report — FY 2025–26</h5><p>Full audit trail for NGO financial reporting and compliance</p></div>
+                <button class="btn btn-outline btn-sm">⬇ PDF</button>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Loans by State (Top 6)</div>
+            <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px">
+              <div><div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:4px"><span>Chhattisgarh</span><strong>42 loans</strong></div><div class="pb"><div class="pb-fill" style="width:85%"></div></div></div>
+              <div><div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:4px"><span>Uttar Pradesh</span><strong>38 loans</strong></div><div class="pb"><div class="pb-fill" style="width:75%"></div></div></div>
+              <div><div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:4px"><span>Bihar</span><strong>29 loans</strong></div><div class="pb"><div class="pb-fill" style="width:58%"></div></div></div>
+              <div><div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:4px"><span>Madhya Pradesh</span><strong>24 loans</strong></div><div class="pb"><div class="pb-fill" style="width:48%"></div></div></div>
+              <div><div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:4px"><span>Maharashtra</span><strong>18 loans</strong></div><div class="pb"><div class="pb-fill" style="width:36%"></div></div></div>
+              <div><div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:4px"><span>Odisha</span><strong>12 loans</strong></div><div class="pb"><div class="pb-fill" style="width:24%"></div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── NOTIFICATIONS ── -->
+      <div class="panel" id="panel-notifications">
+        <div class="ph"><h2>Notifications</h2><p>System alerts and activity updates</p></div>
+        <div class="card">
+          <div style="display:flex;flex-direction:column;gap:0">
+            <div style="display:flex;gap:12px;padding:14px 0;border-bottom:1px solid var(--border);background:rgba(212,129,58,0.04);border-radius:8px;padding:12px">
+              <span style="font-size:1.3rem;flex-shrink:0">🚨</span>
+              <div><h5 style="font-size:0.85rem;font-weight:700;color:var(--earth)">3 Applications Overdue for Review</h5><p style="font-size:0.78rem;color:var(--muted);margin-top:2px">Ramesh Kumar (36h), Lakshmi Bai (28h), and Dinesh Patel (12h) are waiting. Please review today.</p><div style="font-size:0.7rem;color:var(--muted);margin-top:4px;font-family:'DM Mono',monospace">Today · 8:00 AM</div></div>
+            </div>
+            <div style="height:10px"></div>
+            <div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
+              <span style="font-size:1.3rem">💸</span>
+              <div><h5 style="font-size:0.85rem;font-weight:700;color:var(--earth)">Priya Devi Loan Fully Funded</h5><p style="font-size:0.78rem;color:var(--muted);margin-top:2px">₹18,000 for irrigation — loan is 100% funded. Ready for disbursement to SBI account XXXX8821.</p><div style="font-size:0.7rem;color:var(--muted);margin-top:4px;font-family:'DM Mono',monospace">Mar 12 · 4:30 PM</div></div>
+            </div>
+            <div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
+              <span style="font-size:1.3rem">💚</span>
+              <div><h5 style="font-size:0.85rem;font-weight:700;color:var(--earth)">New Donor Registered — Ravi Shankar</h5><p style="font-size:0.78rem;color:var(--muted);margin-top:2px">Ravi Shankar from Pune joined and made an initial ₹5,000 donation to Suresh Yadav's equipment loan.</p><div style="font-size:0.7rem;color:var(--muted);margin-top:4px;font-family:'DM Mono',monospace">Mar 12 · 2:00 PM</div></div>
+            </div>
+            <div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
+              <span style="font-size:1.3rem">⏰</span>
+              <div><h5 style="font-size:0.85rem;font-weight:700;color:var(--earth)">Repayment Overdue — Arun Mehta</h5><p style="font-size:0.78rem;color:var(--muted);margin-top:2px">Instalment #3 of ₹1,800 was due Mar 1 and has not been received. Please contact the farmer.</p><div style="font-size:0.7rem;color:var(--muted);margin-top:4px;font-family:'DM Mono',monospace">Mar 2 · 9:00 AM</div></div>
+            </div>
+            <div style="display:flex;gap:12px;padding:12px 0">
+              <span style="font-size:1.3rem">✅</span>
+              <div><h5 style="font-size:0.85rem;font-weight:700;color:var(--earth)">Ramesh Kumar — Loan Disbursed</h5><p style="font-size:0.78rem;color:var(--muted);margin-top:2px">₹25,000 was successfully transferred to Ramesh Kumar's SBI account on Dec 14, 2025.</p><div style="font-size:0.7rem;color:var(--muted);margin-top:4px;font-family:'DM Mono',monospace">Dec 14, 2025 · 11:00 AM</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ═══════════════════════
+     APPROVE MODAL
+═══════════════════════ -->
+<div class="overlay" id="approve-overlay">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h3>Approve Loan Application</h3>
+      <button class="modal-close" onclick="closeModal('approve-overlay')">✕</button>
+    </div>
+    <div class="confirm-farmer">
+      <div class="fa" id="am-icon" style="font-size:1.6rem">🌾</div>
+      <div>
+        <h5 id="am-name">Ramesh Kumar</h5>
+        <p id="am-detail">Raipur, CG · Seeds & Planting</p>
+      </div>
+      <div style="margin-left:auto;font-family:'DM Mono',monospace;font-size:1.1rem;font-weight:500" id="am-amount">₹25,000</div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div class="note-row"><span class="lbl">Loan will be listed for</span><span class="val">Public donor funding</span></div>
+      <div class="note-row"><span class="lbl">Farmer will be notified</span><span class="val">Via SMS + portal</span></div>
+      <div class="note-row"><span class="lbl">Expected funding time</span><span class="val">3–7 days</span></div>
+    </div>
+    <div class="form-group">
+      <label>Internal Note (optional)</label>
+      <textarea placeholder="e.g. Verified land records in person. Strong repayment history." style="min-height:60px"></textarea>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-ghost" style="flex:1;padding:11px;justify-content:center" onclick="closeModal('approve-overlay')">Cancel</button>
+      <button class="btn btn-approve" style="flex:2;padding:11px;justify-content:center" onclick="confirmApprove()">✓ Approve & Publish</button>
+    </div>
+  </div>
+</div>
+
+<!-- REJECT MODAL -->
+<div class="overlay" id="reject-overlay">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h3>Reject Application</h3>
+      <button class="modal-close" onclick="closeModal('reject-overlay')">✕</button>
+    </div>
+    <div class="confirm-farmer" style="border-color:rgba(192,57,43,0.2);background:rgba(192,57,43,0.04)">
+      <div style="font-size:1.6rem">⚠️</div>
+      <div><h5 id="rm-name">Ramesh Kumar</h5><p>This action will notify the farmer that their application was rejected.</p></div>
+    </div>
+    <div class="form-group">
+      <label>Reason for Rejection</label>
+      <select>
+        <option>Incomplete documents</option>
+        <option>Land records could not be verified</option>
+        <option>Loan amount exceeds eligible limit</option>
+        <option>Duplicate application</option>
+        <option>Other (specify below)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Additional Note</label>
+      <textarea placeholder="Provide a brief explanation to be sent to the farmer…" style="min-height:60px"></textarea>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-ghost" style="flex:1;padding:11px;justify-content:center" onclick="closeModal('reject-overlay')">Cancel</button>
+      <button class="btn btn-danger-outline" style="flex:2;padding:11px;justify-content:center;border-radius:7px" onclick="confirmReject()">✕ Reject & Notify</button>
+    </div>
+  </div>
+</div>
+
+<!-- DISBURSE MODAL -->
+<div class="overlay" id="disb-overlay">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h3>Initiate Disbursement</h3>
+      <button class="modal-close" onclick="closeModal('disb-overlay')">✕</button>
+    </div>
+    <div class="confirm-farmer">
+      <div style="font-size:1.6rem">💸</div>
+      <div>
+        <h5 id="dm-name">Priya Devi</h5>
+        <p>Funds fully raised · Ready to transfer</p>
+      </div>
+      <div style="margin-left:auto;font-family:'DM Mono',monospace;font-size:1.1rem;font-weight:500" id="dm-amount">₹18,000</div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div class="note-row"><span class="lbl">Transfer to</span><span class="val">SBI Account XXXX8821</span></div>
+      <div class="note-row"><span class="lbl">IFSC</span><span class="val">SBIN0001234</span></div>
+      <div class="note-row"><span class="lbl">Expected credit</span><span class="val">Within 24 hours</span></div>
+      <div class="note-row"><span class="lbl">Donor notification</span><span class="val">Auto-sent after transfer</span></div>
+    </div>
+    <div class="alert alert-warn" style="margin-bottom:14px">
+      <span>⚠️</span><div class="alert-text"><p>Please double-check bank details before confirming. Transfers cannot be reversed once initiated.</p></div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-ghost" style="flex:1;padding:11px;justify-content:center" onclick="closeModal('disb-overlay')">Cancel</button>
+      <button class="btn btn-ngo" style="flex:2;padding:11px;justify-content:center" onclick="confirmDisb()">💸 Confirm Transfer</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUCCESS TOAST -->
+<div id="toast" style="position:fixed;bottom:28px;right:28px;background:var(--earth);color:var(--cream);padding:12px 20px;border-radius:10px;font-size:0.85rem;font-weight:500;opacity:0;transition:opacity 0.3s;z-index:999;max-width:320px;border-left:3px solid var(--wheat)"></div>
+
+<script>
+  const panelMap = {
+    dashboard:0, applications:1, 'active-loans':2, disbursements:3,
+    repayments:4, farmers:5, donors:6, reports:7, notifications:8
+  };
+
+  function enterPortal() {
+    document.getElementById('view-auth').classList.remove('active');
+    document.getElementById('view-portal').classList.add('active');
+  }
+
+  function doLogout() {
+    document.getElementById('view-portal').classList.remove('active');
+    document.getElementById('view-auth').classList.add('active');
+  }
+
+  function showPanel(name) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + name).classList.add('active');
+    document.querySelectorAll('.si').forEach(s => s.classList.remove('active'));
+    const items = document.querySelectorAll('.si');
+    if (panelMap[name] !== undefined) items[panelMap[name]]?.classList.add('active');
+    document.querySelector('.main').scrollTop = 0;
+  }
+
+  function setF(el) {
+    document.querySelectorAll('.fc').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  // Approve
+  function openApproveModal(name, icon, loc, purpose, amount) {
+    document.getElementById('am-name').textContent = name;
+    document.getElementById('am-icon').textContent = icon;
+    document.getElementById('am-detail').textContent = loc + ' · ' + purpose;
+    document.getElementById('am-amount').textContent = '₹' + parseInt(amount).toLocaleString('en-IN');
+    document.getElementById('approve-overlay').classList.add('open');
+  }
+
+  function confirmApprove() {
+    const name = document.getElementById('am-name').textContent;
+    closeModal('approve-overlay');
+    showToast('✓ ' + name + '\'s application approved and published for funding!');
+  }
+
+  // Reject
+  function openRejectModal(name) {
+    document.getElementById('rm-name').textContent = name;
+    document.getElementById('reject-overlay').classList.add('open');
+  }
+
+  function confirmReject() {
+    const name = document.getElementById('rm-name').textContent;
+    closeModal('reject-overlay');
+    showToast('Application for ' + name + ' has been rejected. Farmer notified via SMS.');
+  }
+
+  // Disburse
+  function showDisbModal(name, amount) {
+    document.getElementById('dm-name').textContent = name;
+    document.getElementById('dm-amount').textContent = '₹' + parseInt(amount).toLocaleString('en-IN');
+    document.getElementById('disb-overlay').classList.add('open');
+  }
+
+  function confirmDisb() {
+    const name = document.getElementById('dm-name').textContent;
+    closeModal('disb-overlay');
+    showToast('💸 Transfer initiated to ' + name + '. Donors will be notified automatically.');
+  }
+
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+  }
+
+  // Close on overlay click
+  ['approve-overlay','reject-overlay','disb-overlay'].forEach(id => {
+    document.getElementById(id).addEventListener('click', function(e) {
+      if (e.target === this) closeModal(id);
+    });
+  });
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.opacity = '1';
+    setTimeout(() => t.style.opacity = '0', 3500);
+  }
+</script>
+</body>
+</html>

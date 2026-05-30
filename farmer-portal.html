@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KisanSetu — Farmer Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --earth: #2D1B00;
+    --soil: #5C3A1E;
+    --wheat: #D4A853;
+    --gold: #F2C46D;
+    --cream: #FDF6E3;
+    --sage: #7A9E7E;
+    --leaf: #4A7C59;
+    --sky: #A8C5DA;
+    --white: #FFFFFF;
+    --muted: #8A7560;
+    --border: rgba(92,58,30,0.15);
+    --surface: #F7F0DC;
+    --danger: #C0392B;
+    --warning: #D4813A;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--earth);
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  /* ── VIEWS ── */
+  .view { display: none; min-height: 100vh; }
+  .view.active { display: block; }
+
+  /* ══════════════════════════════
+     LOGIN / REGISTER VIEW
+  ══════════════════════════════ */
+  .auth-view {
+    display: none;
+    min-height: 100vh;
+    background: var(--earth);
+    position: relative;
+    overflow: hidden;
+  }
+  .auth-view.active { display: grid; grid-template-columns: 1fr 1fr; }
+
+  .auth-bg {
+    position: relative;
+    display: flex; flex-direction: column;
+    justify-content: flex-end; padding: 60px;
+    overflow: hidden;
+  }
+  .auth-bg::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 30% 40%, rgba(212,168,83,0.2) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 50% at 70% 80%, rgba(74,124,89,0.15) 0%, transparent 60%);
+  }
+  .auth-bg-pattern {
+    position: absolute; inset: 0; opacity: 0.04;
+    background-image: repeating-linear-gradient(
+      45deg,
+      var(--wheat) 0, var(--wheat) 1px,
+      transparent 0, transparent 50%
+    );
+    background-size: 20px 20px;
+  }
+  .auth-bg-content { position: relative; z-index: 1; }
+  .auth-bg .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem; font-weight: 900;
+    color: var(--cream); letter-spacing: -1px;
+    margin-bottom: 40px;
+  }
+  .auth-bg .logo span { color: var(--wheat); }
+  .auth-bg h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 3vw, 2.8rem);
+    color: var(--cream); line-height: 1.2;
+    font-weight: 900; margin-bottom: 16px;
+  }
+  .auth-bg p { color: rgba(253,246,227,0.6); font-size: 0.95rem; line-height: 1.7; max-width: 360px; }
+
+  .auth-stats {
+    display: flex; gap: 32px; margin-top: 40px;
+  }
+  .auth-stat .num {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem; font-weight: 700;
+    color: var(--wheat);
+  }
+  .auth-stat .lbl { font-size: 0.75rem; color: rgba(253,246,227,0.5); margin-top: 2px; }
+
+  .auth-form-side {
+    background: var(--cream);
+    display: flex; align-items: center; justify-content: center;
+    padding: 60px 48px;
+  }
+  .auth-form-box { width: 100%; max-width: 400px; }
+  .auth-form-box h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem; font-weight: 900;
+    color: var(--earth); margin-bottom: 6px;
+  }
+  .auth-form-box .sub { font-size: 0.88rem; color: var(--muted); margin-bottom: 32px; }
+  .auth-form-box .sub a { color: var(--leaf); text-decoration: none; font-weight: 600; }
+
+  .tabs {
+    display: flex; gap: 0; margin-bottom: 28px;
+    border: 1.5px solid var(--border); border-radius: 8px; overflow: hidden;
+  }
+  .tab-btn {
+    flex: 1; padding: 10px; font-size: 0.85rem; font-weight: 600;
+    background: transparent; border: none; cursor: pointer;
+    color: var(--muted); transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .tab-btn.active { background: var(--leaf); color: var(--white); }
+
+  .form-group { margin-bottom: 18px; }
+  .form-group label {
+    display: block; font-size: 0.8rem; font-weight: 600;
+    color: var(--soil); margin-bottom: 6px; letter-spacing: 0.3px;
+  }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%; padding: 11px 14px;
+    border: 1.5px solid var(--border); border-radius: 8px;
+    background: var(--white); color: var(--earth);
+    font-size: 0.9rem; font-family: 'DM Sans', sans-serif;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    border-color: var(--leaf);
+    box-shadow: 0 0 0 3px rgba(74,124,89,0.1);
+  }
+  .form-group textarea { resize: vertical; min-height: 80px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  .btn {
+    padding: 10px 22px; border-radius: 6px; font-size: 0.875rem;
+    font-weight: 600; cursor: pointer; transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+    letter-spacing: 0.2px; border: none;
+  }
+  .btn-primary { background: var(--leaf); color: var(--white); }
+  .btn-primary:hover { background: var(--earth); }
+  .btn-outline { background: transparent; border: 1.5px solid var(--soil); color: var(--soil); }
+  .btn-outline:hover { background: var(--soil); color: var(--cream); }
+  .btn-full { width: 100%; padding: 13px; font-size: 1rem; border-radius: 8px; }
+  .btn-ghost { background: transparent; border: 1.5px solid var(--border); color: var(--muted); }
+  .btn-ghost:hover { border-color: var(--soil); color: var(--soil); }
+  .btn-danger { background: var(--danger); color: var(--white); }
+
+  /* ══════════════════════════════
+     PORTAL LAYOUT
+  ══════════════════════════════ */
+  .portal-layout {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    grid-template-rows: 60px 1fr;
+    min-height: 100vh;
+  }
+
+  /* Top bar */
+  .portal-topbar {
+    grid-column: 1 / -1;
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center;
+    padding: 0 24px; gap: 16px;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .topbar-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem; font-weight: 900;
+    color: var(--earth); margin-right: 8px;
+    text-decoration: none;
+  }
+  .topbar-logo span { color: var(--leaf); }
+  .topbar-badge {
+    background: rgba(74,124,89,0.12);
+    border: 1px solid rgba(74,124,89,0.2);
+    color: var(--leaf); font-size: 0.7rem;
+    font-weight: 700; padding: 2px 8px;
+    border-radius: 20px; letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .topbar-right {
+    margin-left: auto; display: flex; align-items: center; gap: 14px;
+  }
+  .notif-btn {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 1rem; position: relative;
+  }
+  .notif-dot {
+    position: absolute; top: 6px; right: 6px;
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--danger); border: 1.5px solid var(--white);
+  }
+  .user-chip {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 12px 5px 5px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; cursor: pointer;
+  }
+  .user-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--sage), var(--leaf));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.8rem; color: var(--white); font-weight: 700;
+  }
+  .user-name { font-size: 0.82rem; font-weight: 600; color: var(--earth); }
+
+  /* Sidebar */
+  .portal-sidebar {
+    background: var(--white);
+    border-right: 1px solid var(--border);
+    padding: 20px 12px;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .side-section-label {
+    font-size: 0.65rem; font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase; color: var(--muted);
+    padding: 12px 12px 6px; margin-top: 8px;
+  }
+  .side-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; border-radius: 8px; cursor: pointer;
+    font-size: 0.83rem; color: var(--muted);
+    transition: all 0.15s; text-decoration: none;
+  }
+  .side-item:hover { background: rgba(74,124,89,0.08); color: var(--leaf); }
+  .side-item.active { background: rgba(74,124,89,0.12); color: var(--leaf); font-weight: 600; }
+  .side-icon { font-size: 1rem; width: 20px; text-align: center; flex-shrink: 0; }
+  .side-badge {
+    margin-left: auto; background: var(--warning);
+    color: var(--white); font-size: 0.65rem;
+    font-weight: 700; padding: 1px 6px; border-radius: 10px;
+  }
+  .sidebar-footer {
+    margin-top: auto; padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* Main content */
+  .portal-main {
+    background: var(--surface);
+    padding: 32px 36px;
+    overflow-y: auto;
+  }
+
+  /* ── Panel system ── */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* Page header */
+  .page-header { margin-bottom: 28px; }
+  .page-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.7rem; font-weight: 900;
+    color: var(--earth); letter-spacing: -0.5px;
+  }
+  .page-header p { font-size: 0.875rem; color: var(--muted); margin-top: 4px; }
+  .page-header-row { display: flex; align-items: center; justify-content: space-between; }
+
+  /* Cards */
+  .card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px 24px;
+    box-shadow: 0 2px 12px rgba(45,27,0,0.04);
+  }
+
+  /* Stats row */
+  .stats-grid {
+    display: grid; grid-template-columns: repeat(4,1fr);
+    gap: 14px; margin-bottom: 24px;
+  }
+  .stat-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px 20px;
+  }
+  .stat-card .sc-icon { font-size: 1.5rem; margin-bottom: 10px; }
+  .stat-card .sc-label { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.3px; margin-bottom: 4px; text-transform: uppercase; }
+  .stat-card .sc-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem; font-weight: 700; color: var(--earth);
+  }
+  .stat-card .sc-change { font-size: 0.72rem; color: var(--leaf); margin-top: 2px; }
+  .stat-card .sc-change.warn { color: var(--warning); }
+
+  /* Tags */
+  .tag {
+    display: inline-block; padding: 3px 10px; border-radius: 20px;
+    font-size: 0.7rem; font-weight: 600; letter-spacing: 0.3px; text-transform: uppercase;
+  }
+  .tag-green { background: rgba(74,124,89,0.12); color: var(--leaf); }
+  .tag-gold { background: rgba(212,168,83,0.15); color: var(--soil); }
+  .tag-blue { background: rgba(168,197,218,0.25); color: #4A7C9A; }
+  .tag-red { background: rgba(192,57,43,0.1); color: var(--danger); }
+  .tag-grey { background: rgba(138,117,96,0.1); color: var(--muted); }
+
+  /* Loan card */
+  .loan-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 14px; padding: 22px 24px;
+    margin-bottom: 14px;
+    transition: box-shadow 0.2s, transform 0.2s;
+  }
+  .loan-card:hover { box-shadow: 0 6px 24px rgba(45,27,0,0.08); transform: translateY(-1px); }
+  .loan-card-header {
+    display: flex; align-items: flex-start;
+    justify-content: space-between; margin-bottom: 14px;
+  }
+  .loan-card-title h4 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem; font-weight: 700; color: var(--earth);
+  }
+  .loan-card-title p { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+  .loan-amount {
+    font-family: 'DM Mono', monospace;
+    font-size: 1.3rem; font-weight: 500; color: var(--earth);
+    text-align: right;
+  }
+  .loan-amount span { display: block; font-size: 0.7rem; color: var(--muted); font-family: 'DM Sans', sans-serif; }
+  .progress-row { margin: 12px 0 8px; }
+  .progress-label { display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 6px; color: var(--muted); }
+  .progress-label strong { color: var(--leaf); }
+  .progress-bar { height: 7px; background: rgba(92,58,30,0.08); border-radius: 10px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 10px; background: linear-gradient(90deg, var(--sage), var(--leaf)); transition: width 0.8s ease; }
+  .loan-meta { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+  .loan-meta-item { font-size: 0.75rem; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+
+  /* Timeline */
+  .timeline { position: relative; padding-left: 24px; }
+  .timeline::before {
+    content: ''; position: absolute; left: 7px; top: 6px; bottom: 6px;
+    width: 2px; background: var(--border);
+  }
+  .timeline-item { position: relative; margin-bottom: 20px; }
+  .timeline-dot {
+    position: absolute; left: -20px; top: 3px;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--white); border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .timeline-dot.done { background: var(--leaf); border-color: var(--leaf); }
+  .timeline-dot.done::after { content: '✓'; font-size: 0.5rem; color: white; }
+  .timeline-dot.current { background: var(--wheat); border-color: var(--wheat); animation: pulse-dot 2s infinite; }
+  @keyframes pulse-dot { 0%,100%{box-shadow:0 0 0 0 rgba(212,168,83,0.4)} 50%{box-shadow:0 0 0 6px rgba(212,168,83,0)} }
+  .timeline-content h5 { font-size: 0.85rem; font-weight: 600; color: var(--earth); }
+  .timeline-content p { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+  .timeline-date { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--muted); margin-top: 3px; }
+
+  /* Repayment table */
+  .repay-table { width: 100%; border-collapse: collapse; }
+  .repay-table th {
+    font-size: 0.7rem; color: var(--muted); text-align: left;
+    padding: 8px 12px 10px; letter-spacing: 0.5px; font-weight: 600;
+    text-transform: uppercase; border-bottom: 1px solid var(--border);
+  }
+  .repay-table td { font-size: 0.82rem; padding: 11px 12px; border-bottom: 1px solid var(--border); }
+  .repay-table tr:last-child td { border-bottom: none; }
+  .repay-table tr:hover td { background: rgba(74,124,89,0.03); }
+
+  /* Form steps */
+  .step-indicator {
+    display: flex; align-items: center; gap: 0;
+    margin-bottom: 32px;
+  }
+  .step {
+    display: flex; align-items: center; gap: 8px;
+    flex: 1;
+  }
+  .step-num {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.78rem; font-weight: 700; color: var(--muted);
+    flex-shrink: 0; transition: all 0.3s;
+  }
+  .step.active .step-num { background: var(--leaf); border-color: var(--leaf); color: white; }
+  .step.done .step-num { background: var(--earth); border-color: var(--earth); color: white; }
+  .step-label { font-size: 0.78rem; font-weight: 500; color: var(--muted); }
+  .step.active .step-label { color: var(--earth); font-weight: 600; }
+  .step-line { flex: 1; height: 2px; background: var(--border); margin: 0 8px; }
+  .step-line.done { background: var(--earth); }
+
+  .form-step { display: none; }
+  .form-step.active { display: block; }
+
+  .form-section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem; font-weight: 700;
+    color: var(--earth); margin-bottom: 4px;
+  }
+  .form-section-sub { font-size: 0.82rem; color: var(--muted); margin-bottom: 20px; }
+
+  .radio-group { display: flex; flex-direction: column; gap: 10px; }
+  .radio-option {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; border: 1.5px solid var(--border);
+    border-radius: 10px; cursor: pointer; transition: all 0.15s;
+  }
+  .radio-option:hover { border-color: var(--sage); }
+  .radio-option.selected { border-color: var(--leaf); background: rgba(74,124,89,0.05); }
+  .radio-option input { display: none; }
+  .radio-circle {
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 2px solid var(--border); flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .radio-option.selected .radio-circle {
+    border-color: var(--leaf); background: var(--leaf);
+    box-shadow: inset 0 0 0 3px white;
+  }
+  .radio-text strong { font-size: 0.88rem; color: var(--earth); }
+  .radio-text span { display: block; font-size: 0.75rem; color: var(--muted); }
+
+  .form-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; }
+
+  /* Summary card */
+  .summary-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+    font-size: 0.85rem;
+  }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-row .label { color: var(--muted); }
+  .summary-row .value { font-weight: 600; color: var(--earth); }
+  .summary-row .value.big {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem; color: var(--leaf);
+  }
+
+  /* Success state */
+  .success-box {
+    text-align: center; padding: 48px 32px;
+  }
+  .success-icon { font-size: 4rem; margin-bottom: 16px; }
+  .success-box h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem; font-weight: 900; color: var(--earth); margin-bottom: 10px;
+  }
+  .success-box p { color: var(--muted); font-size: 0.9rem; line-height: 1.7; max-width: 400px; margin: 0 auto 24px; }
+  .app-id {
+    display: inline-block;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 20px;
+    font-family: 'DM Mono', monospace; font-size: 0.9rem;
+    color: var(--earth); margin-bottom: 24px; letter-spacing: 1px;
+  }
+
+  /* Notification items */
+  .notif-item {
+    display: flex; gap: 12px; padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .notif-item:last-child { border-bottom: none; }
+  .notif-item-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+  .notif-item h5 { font-size: 0.85rem; font-weight: 600; color: var(--earth); }
+  .notif-item p { font-size: 0.78rem; color: var(--muted); margin-top: 2px; line-height: 1.5; }
+  .notif-time { font-size: 0.7rem; color: var(--muted); margin-top: 4px; font-family: 'DM Mono', monospace; }
+  .notif-unread { background: rgba(74,124,89,0.06); border-radius: 8px; padding: 10px 12px; margin: 0 -12px; }
+
+  /* Alert banner */
+  .alert {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 14px 16px; border-radius: 10px; margin-bottom: 20px;
+    border: 1px solid;
+  }
+  .alert-info { background: rgba(168,197,218,0.15); border-color: rgba(168,197,218,0.4); }
+  .alert-warn { background: rgba(212,129,58,0.08); border-color: rgba(212,129,58,0.3); }
+  .alert-success { background: rgba(74,124,89,0.08); border-color: rgba(74,124,89,0.25); }
+  .alert-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+  .alert-text p { font-size: 0.82rem; color: var(--earth); line-height: 1.6; }
+  .alert-text strong { font-weight: 600; }
+
+  /* Grid layouts */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+  /* Animations */
+  @keyframes fadeSlideIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+  .panel.active { animation: fadeSlideIn 0.3s ease; }
+
+  @media (max-width: 900px) {
+    .auth-view.active { grid-template-columns: 1fr; }
+    .auth-bg { display: none; }
+    .portal-layout { grid-template-columns: 1fr; }
+    .portal-sidebar { display: none; }
+    .stats-grid { grid-template-columns: repeat(2,1fr); }
+    .two-col, .three-col { grid-template-columns: 1fr; }
+    .portal-main { padding: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════
+     VIEW 1: AUTH (Login / Register)
+════════════════════════════════════ -->
+<div class="auth-view active" id="view-auth">
+  <div class="auth-bg">
+    <div class="auth-bg-pattern"></div>
+    <div class="auth-bg-content">
+      <div class="logo">Kisan<span>Setu</span></div>
+      <h2>Your crops deserve the right support.</h2>
+      <p>Join thousands of farmers who have accessed fair, transparent micro-loans through our NGO network.</p>
+      <div class="auth-stats">
+        <div class="auth-stat">
+          <div class="num">₹2.4Cr</div>
+          <div class="lbl">Disbursed</div>
+        </div>
+        <div class="auth-stat">
+          <div class="num">2,400+</div>
+          <div class="lbl">Farmers</div>
+        </div>
+        <div class="auth-stat">
+          <div class="num">94%</div>
+          <div class="lbl">Repaid</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="auth-form-side">
+    <div class="auth-form-box">
+      <!-- Login Panel -->
+      <div id="auth-login">
+        <h3>Welcome back 👋</h3>
+        <p class="sub">New farmer? <a href="#" onclick="showRegister()">Create an account →</a></p>
+        <div class="form-group">
+          <label>Mobile Number</label>
+          <input type="tel" placeholder="Enter your 10-digit mobile number">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" placeholder="Enter your password">
+        </div>
+        <button class="btn btn-primary btn-full" onclick="goToPortal()">Log In to Portal</button>
+        <p style="text-align:center;font-size:0.8rem;color:var(--muted);margin-top:16px">
+          <a href="#" style="color:var(--leaf);text-decoration:none">Forgot password?</a>
+        </p>
+        <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);text-align:center">
+          <a href="index.html" style="font-size:0.82rem;color:var(--muted);text-decoration:none">
+            ← Back to KisanSetu Home
+          </a>
+        </div>
+      </div>
+
+      <!-- Register Panel -->
+      <div id="auth-register" style="display:none">
+        <h3>Create account 🌾</h3>
+        <p class="sub">Already registered? <a href="#" onclick="showLogin()">Log in →</a></p>
+        <div class="form-row">
+          <div class="form-group">
+            <label>First Name</label>
+            <input type="text" placeholder="Ramesh">
+          </div>
+          <div class="form-group">
+            <label>Last Name</label>
+            <input type="text" placeholder="Kumar">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Mobile Number</label>
+          <input type="tel" placeholder="10-digit mobile number">
+        </div>
+        <div class="form-group">
+          <label>State</label>
+          <select>
+            <option value="">Select your state</option>
+            <option>Odisha</option>
+            <option>Chhattisgarh</option>
+            <option>Madhya Pradesh</option>
+            <option>Uttar Pradesh</option>
+            <option>Bihar</option>
+            <option>Rajasthan</option>
+            <option>Maharashtra</option>
+            <option>West Bengal</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" placeholder="Create a strong password">
+        </div>
+        <button class="btn btn-primary btn-full" onclick="goToPortal()">Register & Enter Portal</button>
+        <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);text-align:center">
+          <a href="index.html" style="font-size:0.82rem;color:var(--muted);text-decoration:none">
+            ← Back to KisanSetu Home
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     VIEW 2: PORTAL (Dashboard)
+════════════════════════════════════ -->
+<div class="view" id="view-portal">
+  <div class="portal-layout">
+
+    <!-- Top Bar -->
+    <header class="portal-topbar">
+      <a href="kisansetu.html" class="topbar-logo" style="text-decoration:none">Kisan<span>Setu</span></a>
+      <span class="topbar-badge">Farmer Portal</span>
+      <div class="topbar-right">
+        <div class="notif-btn" onclick="showPanel('notifications')">
+          🔔<div class="notif-dot"></div>
+        </div>
+        <div class="user-chip">
+          <div class="user-avatar">RK</div>
+          <span class="user-name">Ramesh Kumar</span>
+        </div>
+        <button class="btn btn-ghost" style="padding:7px 14px;font-size:0.8rem" onclick="logout()">Log out</button>
+      </div>
+    </header>
+
+    <!-- Sidebar -->
+    <aside class="portal-sidebar">
+      <div class="side-section-label">Main Menu</div>
+      <a class="side-item active" onclick="showPanel('dashboard')">
+        <span class="side-icon">🏠</span> Dashboard
+      </a>
+      <a class="side-item" onclick="showPanel('apply')">
+        <span class="side-icon">📝</span> Apply for Loan
+      </a>
+      <a class="side-item" onclick="showPanel('my-loans')">
+        <span class="side-icon">💰</span> My Loans
+        <span class="side-badge">1</span>
+      </a>
+      <a class="side-item" onclick="showPanel('repayments')">
+        <span class="side-icon">📅</span> Repayments
+      </a>
+      <div class="side-section-label">Account</div>
+      <a class="side-item" onclick="showPanel('profile')">
+        <span class="side-icon">👤</span> My Profile
+      </a>
+      <a class="side-item" onclick="showPanel('notifications')">
+        <span class="side-icon">🔔</span> Notifications
+      </a>
+      <div class="sidebar-footer">
+        <a class="side-item" href="kisansetu.html">
+          <span class="side-icon">🌐</span> Back to Website
+        </a>
+        <a class="side-item" onclick="logout()">
+          <span class="side-icon">🚪</span> Log Out
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="portal-main">
+
+      <!-- ── DASHBOARD ── -->
+      <div class="panel active" id="panel-dashboard">
+        <div class="page-header-row">
+          <div class="page-header" style="margin-bottom:0">
+            <h2>Good morning, Ramesh 🌾</h2>
+            <p>Friday, March 13, 2026 · Raipur, Chhattisgarh</p>
+          </div>
+          <button class="btn btn-primary" onclick="showPanel('apply')">+ Apply for Loan</button>
+        </div>
+
+        <div style="height:24px"></div>
+
+        <div class="alert alert-warn">
+          <span class="alert-icon">⚠️</span>
+          <div class="alert-text">
+            <p><strong>Upcoming payment:</strong> Your next repayment of ₹2,500 is due in <strong>5 days</strong> (March 18). Please ensure funds are ready.</p>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="sc-icon">💰</div>
+            <div class="sc-label">Active Loan</div>
+            <div class="sc-val">₹25,000</div>
+            <div class="sc-change">Kharif Seed Loan</div>
+          </div>
+          <div class="stat-card">
+            <div class="sc-icon">✅</div>
+            <div class="sc-label">Amount Repaid</div>
+            <div class="sc-val">₹7,500</div>
+            <div class="sc-change">30% complete</div>
+          </div>
+          <div class="stat-card">
+            <div class="sc-icon">📅</div>
+            <div class="sc-label">Next Due</div>
+            <div class="sc-val">₹2,500</div>
+            <div class="sc-change warn">Due Mar 18</div>
+          </div>
+          <div class="stat-card">
+            <div class="sc-icon">⭐</div>
+            <div class="sc-label">Credit Score</div>
+            <div class="sc-val">Good</div>
+            <div class="sc-change">2 loans repaid</div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="card">
+            <h4 style="font-family:'Playfair Display',serif;font-size:1rem;margin-bottom:16px">Active Loan Status</h4>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <span style="font-size:0.8rem;color:var(--muted)">Kharif Crop Seed Loan</span>
+              <span class="tag tag-gold">Active</span>
+            </div>
+            <div class="progress-row">
+              <div class="progress-label">
+                <span>₹7,500 repaid</span>
+                <strong>30% done</strong>
+              </div>
+              <div class="progress-bar"><div class="progress-fill" style="width:30%"></div></div>
+            </div>
+            <div style="font-size:0.78rem;color:var(--muted);margin-top:8px">Remaining: <strong style="color:var(--earth)">₹17,500</strong> · End date: Oct 2026</div>
+            <button class="btn btn-outline" style="margin-top:16px;width:100%;padding:9px" onclick="showPanel('my-loans')">View Full Details →</button>
+          </div>
+
+          <div class="card">
+            <h4 style="font-family:'Playfair Display',serif;font-size:1rem;margin-bottom:16px">Repayment Timeline</h4>
+            <div class="timeline">
+              <div class="timeline-item">
+                <div class="timeline-dot done"></div>
+                <div class="timeline-content">
+                  <h5>₹2,500 paid</h5>
+                  <div class="timeline-date">Jan 18, 2026</div>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-dot done"></div>
+                <div class="timeline-content">
+                  <h5>₹2,500 paid</h5>
+                  <div class="timeline-date">Feb 18, 2026</div>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-dot done"></div>
+                <div class="timeline-content">
+                  <h5>₹2,500 paid</h5>
+                  <div class="timeline-date">Mar 5, 2026</div>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-dot current"></div>
+                <div class="timeline-content">
+                  <h5>₹2,500 due</h5>
+                  <div class="timeline-date">Mar 18, 2026 — upcoming</div>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                  <h5>₹17,500 remaining</h5>
+                  <div class="timeline-date">Apr–Oct 2026</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── APPLY FOR LOAN ── -->
+      <div class="panel" id="panel-apply">
+        <div class="page-header">
+          <h2>Apply for a Loan</h2>
+          <p>Fill in the details below. Our NGO team will review your application within 2–3 business days.</p>
+        </div>
+
+        <!-- Step indicator -->
+        <div class="step-indicator" id="step-indicator">
+          <div class="step active" data-step="1">
+            <div class="step-num">1</div>
+            <div class="step-label">Loan Details</div>
+          </div>
+          <div class="step-line" id="line-1"></div>
+          <div class="step" data-step="2">
+            <div class="step-num">2</div>
+            <div class="step-label">Personal Info</div>
+          </div>
+          <div class="step-line" id="line-2"></div>
+          <div class="step" data-step="3">
+            <div class="step-num">3</div>
+            <div class="step-label">Documents</div>
+          </div>
+          <div class="step-line" id="line-3"></div>
+          <div class="step" data-step="4">
+            <div class="step-num">4</div>
+            <div class="step-label">Review & Submit</div>
+          </div>
+        </div>
+
+        <div class="card" id="apply-card">
+
+          <!-- Step 1 -->
+          <div class="form-step active" id="step-1">
+            <div class="form-section-title">What is this loan for?</div>
+            <div class="form-section-sub">Select the purpose of the loan and fill in the financial details.</div>
+            <div class="radio-group" style="margin-bottom:20px">
+              <label class="radio-option selected" onclick="selectRadio(this)">
+                <input type="radio" name="purpose" checked>
+                <div class="radio-circle"></div>
+                <div class="radio-text">
+                  <strong>🌾 Seeds & Planting Material</strong>
+                  <span>Purchase of certified seeds for the upcoming season</span>
+                </div>
+              </label>
+              <label class="radio-option" onclick="selectRadio(this)">
+                <input type="radio" name="purpose">
+                <div class="radio-circle"></div>
+                <div class="radio-text">
+                  <strong>💧 Irrigation Equipment</strong>
+                  <span>Pumps, pipes, drip irrigation systems</span>
+                </div>
+              </label>
+              <label class="radio-option" onclick="selectRadio(this)">
+                <input type="radio" name="purpose">
+                <div class="radio-circle"></div>
+                <div class="radio-text">
+                  <strong>🚜 Farm Equipment / Tools</strong>
+                  <span>Machinery, hand tools, storage equipment</span>
+                </div>
+              </label>
+              <label class="radio-option" onclick="selectRadio(this)">
+                <input type="radio" name="purpose">
+                <div class="radio-circle"></div>
+                <div class="radio-text">
+                  <strong>🌱 Fertilizers & Pesticides</strong>
+                  <span>Input materials for crop health and yield</span>
+                </div>
+              </label>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Loan Amount (₹)</label>
+                <input type="number" placeholder="e.g. 25000" id="loan-amount-input">
+              </div>
+              <div class="form-group">
+                <label>Repayment Period</label>
+                <select id="loan-period">
+                  <option>3 months</option>
+                  <option selected>6 months</option>
+                  <option>9 months</option>
+                  <option>12 months</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Describe your need (optional)</label>
+              <textarea placeholder="E.g. I need seeds for the kharif season paddy crop on 2 acres of land..."></textarea>
+            </div>
+            <div class="form-nav">
+              <div></div>
+              <button class="btn btn-primary" onclick="nextStep(2)">Next: Personal Info →</button>
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="form-step" id="step-2">
+            <div class="form-section-title">Personal & Farm Details</div>
+            <div class="form-section-sub">This information helps the NGO verify your application.</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" value="Ramesh Kumar" placeholder="Full name">
+              </div>
+              <div class="form-group">
+                <label>Aadhaar Number</label>
+                <input type="text" placeholder="XXXX XXXX XXXX">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Village / Town</label>
+                <input type="text" placeholder="Village name">
+              </div>
+              <div class="form-group">
+                <label>District</label>
+                <input type="text" placeholder="District">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Land Holding (in acres)</label>
+                <input type="number" placeholder="e.g. 2.5">
+              </div>
+              <div class="form-group">
+                <label>Primary Crop</label>
+                <select>
+                  <option>Paddy / Rice</option>
+                  <option>Wheat</option>
+                  <option>Cotton</option>
+                  <option>Sugarcane</option>
+                  <option>Vegetables</option>
+                  <option>Other</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Bank Account Number</label>
+              <input type="text" placeholder="For loan disbursement">
+            </div>
+            <div class="form-group">
+              <label>IFSC Code</label>
+              <input type="text" placeholder="Bank IFSC code">
+            </div>
+            <div class="form-nav">
+              <button class="btn btn-ghost" onclick="nextStep(1)">← Back</button>
+              <button class="btn btn-primary" onclick="nextStep(3)">Next: Documents →</button>
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="form-step" id="step-3">
+            <div class="form-section-title">Upload Documents</div>
+            <div class="form-section-sub">Upload clear photos or scans. Accepted formats: JPG, PNG, PDF.</div>
+
+            <div class="alert alert-info">
+              <span class="alert-icon">ℹ️</span>
+              <div class="alert-text"><p>If you don't have digital copies, an NGO field worker can help scan your documents during a home visit. <strong>Don't let this stop you from applying.</strong></p></div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <div style="border:1.5px dashed var(--border);border-radius:10px;padding:20px;display:flex;align-items:center;gap:16px;cursor:pointer;transition:border-color 0.2s" onmouseover="this.style.borderColor='var(--leaf)'" onmouseout="this.style.borderColor='var(--border)'">
+                <span style="font-size:1.8rem">🪪</span>
+                <div style="flex:1">
+                  <p style="font-size:0.88rem;font-weight:600;color:var(--earth)">Aadhaar Card</p>
+                  <p style="font-size:0.75rem;color:var(--muted)">Front and back · Required</p>
+                </div>
+                <button class="btn btn-outline" style="padding:7px 16px;font-size:0.8rem">Upload</button>
+              </div>
+              <div style="border:1.5px dashed var(--border);border-radius:10px;padding:20px;display:flex;align-items:center;gap:16px;cursor:pointer;transition:border-color 0.2s" onmouseover="this.style.borderColor='var(--leaf)'" onmouseout="this.style.borderColor='var(--border)'">
+                <span style="font-size:1.8rem">🏡</span>
+                <div style="flex:1">
+                  <p style="font-size:0.88rem;font-weight:600;color:var(--earth)">Land Record / Khasra</p>
+                  <p style="font-size:0.75rem;color:var(--muted)">Land ownership document · Required</p>
+                </div>
+                <button class="btn btn-outline" style="padding:7px 16px;font-size:0.8rem">Upload</button>
+              </div>
+              <div style="border:1.5px dashed var(--border);border-radius:10px;padding:20px;display:flex;align-items:center;gap:16px;cursor:pointer;transition:border-color 0.2s" onmouseover="this.style.borderColor='var(--leaf)'" onmouseout="this.style.borderColor='var(--border)'">
+                <span style="font-size:1.8rem">🏦</span>
+                <div style="flex:1">
+                  <p style="font-size:0.88rem;font-weight:600;color:var(--earth)">Bank Passbook (first page)</p>
+                  <p style="font-size:0.75rem;color:var(--muted)">For disbursement verification · Required</p>
+                </div>
+                <button class="btn btn-outline" style="padding:7px 16px;font-size:0.8rem">Upload</button>
+              </div>
+              <div style="border:1.5px dashed var(--border);border-radius:10px;padding:20px;display:flex;align-items:center;gap:16px;cursor:pointer;transition:border-color 0.2s" onmouseover="this.style.borderColor='var(--sage)'" onmouseout="this.style.borderColor='var(--border)'">
+                <span style="font-size:1.8rem">📷</span>
+                <div style="flex:1">
+                  <p style="font-size:0.88rem;font-weight:600;color:var(--earth)">Passport Photo</p>
+                  <p style="font-size:0.75rem;color:var(--muted)">Recent photograph · Optional</p>
+                </div>
+                <button class="btn btn-ghost" style="padding:7px 16px;font-size:0.8rem">Upload</button>
+              </div>
+            </div>
+            <div class="form-nav">
+              <button class="btn btn-ghost" onclick="nextStep(2)">← Back</button>
+              <button class="btn btn-primary" onclick="nextStep(4)">Next: Review →</button>
+            </div>
+          </div>
+
+          <!-- Step 4: Review -->
+          <div class="form-step" id="step-4">
+            <div class="form-section-title">Review & Submit</div>
+            <div class="form-section-sub">Please check your details before submitting your application.</div>
+            <div style="margin-bottom:20px">
+              <div class="summary-row">
+                <span class="label">Loan Purpose</span>
+                <span class="value">Seeds & Planting Material</span>
+              </div>
+              <div class="summary-row">
+                <span class="label">Loan Amount</span>
+                <span class="value big">₹25,000</span>
+              </div>
+              <div class="summary-row">
+                <span class="label">Repayment Period</span>
+                <span class="value">6 months</span>
+              </div>
+              <div class="summary-row">
+                <span class="label">Monthly Instalment</span>
+                <span class="value">~₹4,167</span>
+              </div>
+              <div class="summary-row">
+                <span class="label">Applicant</span>
+                <span class="value">Ramesh Kumar</span>
+              </div>
+              <div class="summary-row">
+                <span class="label">Location</span>
+                <span class="value">Raipur, Chhattisgarh</span>
+              </div>
+              <div class="summary-row">
+                <span class="label">Documents</span>
+                <span class="value">3 uploaded</span>
+              </div>
+            </div>
+            <div class="alert alert-success">
+              <span class="alert-icon">✅</span>
+              <div class="alert-text"><p>By submitting, you agree that all information provided is accurate. The NGO team will contact you within 2–3 working days for verification.</p></div>
+            </div>
+            <div class="form-nav">
+              <button class="btn btn-ghost" onclick="nextStep(3)">← Back</button>
+              <button class="btn btn-primary" style="padding:12px 32px" onclick="submitApplication()">Submit Application 🌾</button>
+            </div>
+          </div>
+
+          <!-- Step 5: Success -->
+          <div class="form-step" id="step-5">
+            <div class="success-box">
+              <div class="success-icon">🎉</div>
+              <h3>Application Submitted!</h3>
+              <p>Your loan application has been received and is under review by the NGO team. You will be notified via SMS and on this portal within 2–3 working days.</p>
+              <div class="app-id">APP-2026-00847</div>
+              <div style="display:flex;gap:12px;justify-content:center">
+                <button class="btn btn-primary" onclick="showPanel('my-loans')">View My Loans →</button>
+                <button class="btn btn-ghost" onclick="resetApply()">Apply for Another</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── MY LOANS ── -->
+      <div class="panel" id="panel-my-loans">
+        <div class="page-header-row">
+          <div class="page-header" style="margin-bottom:0">
+            <h2>My Loans</h2>
+            <p>All your loan applications and active loans</p>
+          </div>
+          <button class="btn btn-primary" onclick="showPanel('apply')">+ New Application</button>
+        </div>
+        <div style="height:24px"></div>
+
+        <!-- Active loan -->
+        <div class="loan-card">
+          <div class="loan-card-header">
+            <div class="loan-card-title">
+              <h4>🌾 Kharif Crop Seed Loan</h4>
+              <p>Applied: Dec 10, 2025 · Approved: Dec 14, 2025</p>
+            </div>
+            <div>
+              <div class="loan-amount">₹25,000 <span>Total amount</span></div>
+              <div style="text-align:right;margin-top:6px"><span class="tag tag-gold">Active</span></div>
+            </div>
+          </div>
+          <div class="progress-row">
+            <div class="progress-label">
+              <span>₹7,500 repaid of ₹25,000</span>
+              <strong>30% complete</strong>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:30%"></div></div>
+          </div>
+          <div class="loan-meta">
+            <span class="loan-meta-item">📅 Next: Mar 18</span>
+            <span class="loan-meta-item">🕐 6 months term</span>
+            <span class="loan-meta-item">💳 Monthly ₹4,167</span>
+            <span class="loan-meta-item">🏦 SBI Raipur</span>
+            <button class="btn btn-outline" style="margin-left:auto;padding:6px 14px;font-size:0.78rem" onclick="showPanel('repayments')">View Repayments</button>
+          </div>
+        </div>
+
+        <!-- Past loan 1 -->
+        <div class="loan-card">
+          <div class="loan-card-header">
+            <div class="loan-card-title">
+              <h4>💧 Irrigation Pump Loan</h4>
+              <p>Applied: Jan 5, 2025 · Completed: Aug 20, 2025</p>
+            </div>
+            <div>
+              <div class="loan-amount">₹15,000 <span>Total amount</span></div>
+              <div style="text-align:right;margin-top:6px"><span class="tag tag-green">Repaid ✓</span></div>
+            </div>
+          </div>
+          <div class="progress-row">
+            <div class="progress-label">
+              <span>₹15,000 fully repaid</span>
+              <strong>100% complete</strong>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>
+          </div>
+          <div class="loan-meta">
+            <span class="loan-meta-item">✅ Completed Aug 2025</span>
+            <span class="loan-meta-item">🕐 6 months term</span>
+            <span class="loan-meta-item">⭐ On-time repayment</span>
+          </div>
+        </div>
+
+        <!-- Past loan 2 -->
+        <div class="loan-card">
+          <div class="loan-card-header">
+            <div class="loan-card-title">
+              <h4>🌱 Fertilizer Loan</h4>
+              <p>Applied: Mar 2, 2024 · Completed: Sep 10, 2024</p>
+            </div>
+            <div>
+              <div class="loan-amount">₹8,000 <span>Total amount</span></div>
+              <div style="text-align:right;margin-top:6px"><span class="tag tag-green">Repaid ✓</span></div>
+            </div>
+          </div>
+          <div class="progress-row">
+            <div class="progress-label">
+              <span>₹8,000 fully repaid</span>
+              <strong>100% complete</strong>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>
+          </div>
+          <div class="loan-meta">
+            <span class="loan-meta-item">✅ Completed Sep 2024</span>
+            <span class="loan-meta-item">🕐 3 months term</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── REPAYMENTS ── -->
+      <div class="panel" id="panel-repayments">
+        <div class="page-header">
+          <h2>Repayment Schedule</h2>
+          <p>Track your payment history and upcoming dues for all active loans</p>
+        </div>
+
+        <div class="alert alert-warn">
+          <span class="alert-icon">⏰</span>
+          <div class="alert-text"><p><strong>Next payment of ₹2,500</strong> is due on <strong>March 18, 2026</strong>. Please contact your NGO officer or pay at the nearest payment center.</p></div>
+        </div>
+
+        <div class="card" style="margin-bottom:20px">
+          <h4 style="font-family:'Playfair Display',serif;font-size:1rem;margin-bottom:16px">Kharif Seed Loan — ₹25,000</h4>
+          <table class="repay-table">
+            <thead>
+              <tr>
+                <th>Instalment</th>
+                <th>Due Date</th>
+                <th>Amount</th>
+                <th>Paid On</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>#1</td>
+                <td>Jan 18, 2026</td>
+                <td>₹2,500</td>
+                <td>Jan 17, 2026</td>
+                <td><span class="tag tag-green">Paid ✓</span></td>
+              </tr>
+              <tr>
+                <td>#2</td>
+                <td>Feb 18, 2026</td>
+                <td>₹2,500</td>
+                <td>Feb 18, 2026</td>
+                <td><span class="tag tag-green">Paid ✓</span></td>
+              </tr>
+              <tr>
+                <td>#3</td>
+                <td>Mar 5, 2026</td>
+                <td>₹2,500</td>
+                <td>Mar 4, 2026</td>
+                <td><span class="tag tag-green">Paid ✓</span></td>
+              </tr>
+              <tr style="background:rgba(212,168,83,0.06)">
+                <td><strong>#4</strong></td>
+                <td><strong>Mar 18, 2026</strong></td>
+                <td><strong>₹2,500</strong></td>
+                <td>—</td>
+                <td><span class="tag tag-gold">Due Soon</span></td>
+              </tr>
+              <tr>
+                <td>#5</td>
+                <td>Apr 18, 2026</td>
+                <td>₹2,500</td>
+                <td>—</td>
+                <td><span class="tag tag-grey">Upcoming</span></td>
+              </tr>
+              <tr>
+                <td>#6–10</td>
+                <td>May–Oct 2026</td>
+                <td>₹12,500</td>
+                <td>—</td>
+                <td><span class="tag tag-grey">Upcoming</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── PROFILE ── -->
+      <div class="panel" id="panel-profile">
+        <div class="page-header">
+          <h2>My Profile</h2>
+          <p>Your personal and farm information</p>
+        </div>
+        <div class="two-col">
+          <div class="card">
+            <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
+              <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--sage),var(--leaf));display:flex;align-items:center;justify-content:center;font-size:1.6rem;color:white;font-weight:700">RK</div>
+              <div>
+                <h4 style="font-family:'Playfair Display',serif;font-size:1.2rem">Ramesh Kumar</h4>
+                <p style="font-size:0.8rem;color:var(--muted)">Member since Jan 2024 · Farmer ID: KS-4821</p>
+              </div>
+            </div>
+            <div class="summary-row"><span class="label">Mobile</span><span class="value">+91 98765 43210</span></div>
+            <div class="summary-row"><span class="label">State</span><span class="value">Chhattisgarh</span></div>
+            <div class="summary-row"><span class="label">District</span><span class="value">Raipur</span></div>
+            <div class="summary-row"><span class="label">Village</span><span class="value">Kharora</span></div>
+            <div class="summary-row"><span class="label">Aadhaar</span><span class="value">XXXX XXXX 4521</span></div>
+            <button class="btn btn-outline" style="margin-top:16px;width:100%;padding:9px">Edit Profile</button>
+          </div>
+          <div class="card">
+            <h4 style="font-family:'Playfair Display',serif;font-size:1rem;margin-bottom:16px">Farm Details</h4>
+            <div class="summary-row"><span class="label">Land Holding</span><span class="value">2.5 acres</span></div>
+            <div class="summary-row"><span class="label">Primary Crop</span><span class="value">Paddy / Rice</span></div>
+            <div class="summary-row"><span class="label">Irrigation</span><span class="value">Borewell</span></div>
+            <div class="summary-row"><span class="label">Bank</span><span class="value">SBI, Raipur Branch</span></div>
+            <div class="summary-row"><span class="label">Account No.</span><span class="value">XXXX XXXX 8821</span></div>
+            <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+              <h4 style="font-family:'Playfair Display',serif;font-size:0.95rem;margin-bottom:12px">Loan History</h4>
+              <div style="display:flex;gap:20px">
+                <div style="text-align:center">
+                  <div style="font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;color:var(--earth)">3</div>
+                  <div style="font-size:0.72rem;color:var(--muted)">Total Loans</div>
+                </div>
+                <div style="text-align:center">
+                  <div style="font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;color:var(--leaf)">2</div>
+                  <div style="font-size:0.72rem;color:var(--muted)">Repaid</div>
+                </div>
+                <div style="text-align:center">
+                  <div style="font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;color:var(--warning)">1</div>
+                  <div style="font-size:0.72rem;color:var(--muted)">Active</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── NOTIFICATIONS ── -->
+      <div class="panel" id="panel-notifications">
+        <div class="page-header">
+          <h2>Notifications</h2>
+          <p>Updates on your loans, payments, and account</p>
+        </div>
+        <div class="card">
+          <div class="notif-item notif-unread">
+            <span class="notif-item-icon">⚠️</span>
+            <div>
+              <h5>Payment Due Soon</h5>
+              <p>Your next instalment of ₹2,500 for the Kharif Seed Loan is due on March 18, 2026. Please ensure payment is made on time.</p>
+              <div class="notif-time">Today · 8:00 AM</div>
+            </div>
+          </div>
+          <div class="notif-item notif-unread">
+            <span class="notif-item-icon">💚</span>
+            <div>
+              <h5>Loan Fully Funded!</h5>
+              <p>Your Kharif Seed Loan of ₹25,000 has been fully funded by donors. Disbursement will happen within 48 hours to your SBI account.</p>
+              <div class="notif-time">Dec 14, 2025 · 11:30 AM</div>
+            </div>
+          </div>
+          <div class="notif-item">
+            <span class="notif-item-icon">✅</span>
+            <div>
+              <h5>Application Approved</h5>
+              <p>Your loan application APP-2025-00672 has been reviewed and approved by the NGO team. It is now live for donor funding.</p>
+              <div class="notif-time">Dec 12, 2025 · 2:15 PM</div>
+            </div>
+          </div>
+          <div class="notif-item">
+            <span class="notif-item-icon">🏆</span>
+            <div>
+              <h5>Previous Loan Completed</h5>
+              <p>Congratulations! You have successfully repaid the Irrigation Pump Loan of ₹15,000. Your credit rating has been updated to Good.</p>
+              <div class="notif-time">Aug 20, 2025 · 9:00 AM</div>
+            </div>
+          </div>
+          <div class="notif-item">
+            <span class="notif-item-icon">👋</span>
+            <div>
+              <h5>Welcome to KisanSetu</h5>
+              <p>Your farmer account has been created. You can now apply for loans and track your applications on this portal.</p>
+              <div class="notif-time">Jan 10, 2024 · 10:00 AM</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script>
+  let currentStep = 1;
+
+  function showRegister() {
+    document.getElementById('auth-login').style.display = 'none';
+    document.getElementById('auth-register').style.display = 'block';
+  }
+  function showLogin() {
+    document.getElementById('auth-register').style.display = 'none';
+    document.getElementById('auth-login').style.display = 'block';
+  }
+
+  function goToPortal() {
+    document.getElementById('view-auth').classList.remove('active');
+    document.getElementById('view-portal').classList.add('active');
+  }
+
+  function logout() {
+    document.getElementById('view-portal').classList.remove('active');
+    document.getElementById('view-auth').classList.add('active');
+  }
+
+  function showPanel(name) {
+    // Hide all panels
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    // Show target
+    document.getElementById('panel-' + name).classList.add('active');
+    // Update sidebar
+    document.querySelectorAll('.side-item').forEach(s => s.classList.remove('active'));
+    const map = {
+      dashboard: 0, apply: 1, 'my-loans': 2,
+      repayments: 3, profile: 4, notifications: 5
+    };
+    const items = document.querySelectorAll('.side-item');
+    if (map[name] !== undefined) items[map[name]]?.classList.add('active');
+    // Scroll top
+    document.querySelector('.portal-main').scrollTop = 0;
+  }
+
+  function selectRadio(el) {
+    document.querySelectorAll('.radio-option').forEach(r => r.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  function nextStep(step) {
+    // Hide current
+    document.querySelector('.form-step.active').classList.remove('active');
+    document.getElementById('step-' + step).classList.add('active');
+
+    // Update step indicator
+    document.querySelectorAll('.step').forEach((s, i) => {
+      s.classList.remove('active', 'done');
+      const n = i + 1;
+      if (n < step) s.classList.add('done');
+      if (n === step) s.classList.add('active');
+    });
+    document.querySelectorAll('.step-line').forEach((l, i) => {
+      l.classList.toggle('done', i + 1 < step);
+    });
+
+    currentStep = step;
+  }
+
+  function submitApplication() {
+    // Hide step indicator
+    document.getElementById('step-indicator').style.display = 'none';
+    // Show success
+    document.querySelector('.form-step.active').classList.remove('active');
+    document.getElementById('step-5').classList.add('active');
+  }
+
+  function resetApply() {
+    document.getElementById('step-indicator').style.display = 'flex';
+    document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
+    document.getElementById('step-1').classList.add('active');
+    document.querySelectorAll('.step').forEach((s, i) => {
+      s.classList.remove('active', 'done');
+      if (i === 0) s.classList.add('active');
+    });
+    document.querySelectorAll('.step-line').forEach(l => l.classList.remove('done'));
+    currentStep = 1;
+  }
+</script>
+</body>
+</html>
